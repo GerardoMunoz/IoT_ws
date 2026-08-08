@@ -1,7 +1,7 @@
 # Taller de Internet de las Cosas
 # Laboratorio 1 - Robot Control Center
 
-**Duración:** 2 horas
+**Duración:** 2 4 horas
 
 ## Objetivos
 
@@ -13,6 +13,7 @@ Al finalizar esta práctica el estudiante será capaz de:
 - Publicar mensajes.
 - Suscribirse a tópicos.
 - Comprender el modelo Publish/Subscribe.
+- Desarrollar una interfaz gráfica.
 
 ---
 
@@ -392,9 +393,16 @@ if __name__ == "__main__":
 
 # Parte 3. Construyendo el Robot Control Center
 
+## Instalar
+
+```bash
+pip install flet
+```
+---
+
 ## Documentación de Flet
 
-Durante esta práctica únicamente utilizaremos los siguientes componentes.
+Durante esta práctica utilizaremos los siguientes componentes.
 
 | Clase | Uso |
 |---------|------|
@@ -409,27 +417,10 @@ Durante esta práctica únicamente utilizaremos los siguientes componentes.
 
 ---
 
-## Métodos importantes
 
-```python
-page.add()
+# Ejemplo uso de los componentes
 
-page.update()
-```
 
-Eventos
-
-```python
-on_click
-
-on_change
-```
-
----
-
-# Primera versión de la interfaz
-
-La aplicación tendrá tres módulos.
 
 ```python
 import flet as ft
@@ -466,7 +457,7 @@ def main(page: ft.Page):
     configuration = ft.Container(
         content=ft.Column([
             ft.Text(
-                "Configuración",
+                "Configuración.",
                 size=20
             ),
 
@@ -529,17 +520,15 @@ def main(page: ft.Page):
     action_text = ft.Text(
         "Esperando acción..."
     )
+    
+    def execute_action(e):
+        action_text.value = "¡Acción ejecutada!"
+        page.update()
+
 
     action_button = ft.Button(
         content="Ejecutar",
-        on_click=lambda e: (
-            setattr(
-                action_text,
-                "value",
-                "¡Acción ejecutada!"
-            ),
-            page.update()
-        )
+        on_click=execute_action
     )
 
     action = ft.Container(
@@ -560,20 +549,18 @@ def main(page: ft.Page):
     # -----------------------------
     # Agregar a la página
     # -----------------------------
-
-    page.add(
-        ft.Row([
+    page.scroll = ft.ScrollMode.ALWAYS
+    row= ft.Row([
             configuration,
             monitor,
             action
-        ])
+        ],wrap=True)
+    page.add(
+       row
     )
 
 
 ft.run(main)
-
-
-
 
 ```
 
@@ -584,11 +571,11 @@ ft.run(main)
 Construir el 'Robot Control Center' con los siguietes contenedores:
 
 
-✓ para la configuración y la conexión.
+✓ para la configuración y la conexión de MQTT.
 
 ✓ para suscribirse y mostrar los mensajes recibidos.
 
-✓ para publicar el topico y el payload.
+✓ para publicar el topico y su payload.
 
 
 
