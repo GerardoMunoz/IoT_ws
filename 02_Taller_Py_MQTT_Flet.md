@@ -13,7 +13,6 @@ Al finalizar esta práctica el estudiante será capaz de:
 - Publicar mensajes.
 - Suscribirse a tópicos.
 - Comprender el modelo Publish/Subscribe.
-- Comprender por qué una interfaz gráfica evita el bloqueo producido por `input()`.
 
 ---
 
