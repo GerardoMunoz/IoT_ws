@@ -40,7 +40,7 @@ motor_peed = 20
 Python no tiene constantes reales a nivel de lenguaje (como const en JavaScript o final en Java). El uso de mayúsculas es solo una convención para avisar a otros programadores que ese valor no debe ser modificado.
 Nunca escribir valores "mágicos".
 
-Es el lugar estándar para las constantes globales del script o módulo es después de las importaciones.
+El lugar estándar para las constantes globales es después de las importaciones.
 
 * Uso: Valores que no cambian en todo el programa (configuraciones, URLs, constantes matemáticas).
 * Nomenclatura: Siempre en mayúsculas con guiones bajos (UPPER_CASE).
