@@ -1,7 +1,7 @@
 # Taller de Internet de las Cosas
 # Laboratorio 1 - Robot Control Center
 
-**Duración:** 2 4 horas
+**Duración:** 2  horas
 
 ## Objetivos
 
