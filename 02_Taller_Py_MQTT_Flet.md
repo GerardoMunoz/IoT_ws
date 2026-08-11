@@ -34,7 +34,7 @@ b = 20
 
 ```python
 temperature = 10
-motor_peed = 20
+motor_speed = 20
 ```
 
 ## 1.2 Uso de constantes
