@@ -1,44 +1,41 @@
-
 # Taller de IoT — Raspberry Pi Pico 2 W
+## Programación no bloqueante, Scheduler, Pub/Sub y PicoROS
 
 ## Propósito
 
-En esta clase comenzaremos a interactuar con el mundo físico.
-
-Hasta ahora hemos trabajado principalmente con:
-
-- Python
-- JSON
-- MQTT
-- Flet
-- GitHub
-- pruebas automáticas
-
-Ahora incorporaremos:
-
-- Raspberry Pi Pico 2 W
-- MicroPython
-- GPIO
-- botones
-- LEDs
-- sensores
-- comunicación con MQTT
-
-![](https://www.raspberrypi.com/documentation/microcontrollers/images/pico2w-pinout.svg)
+En esta clase comenzaremos a programar la Raspberry Pi Pico 2 W como
+un sistema IoT.
 
 La pregunta central será:
 
-> ¿Cómo hacemos que un programa reaccione al mundo físico sin bloquearse?
+> ¿Cómo podemos hacer que un microcontrolador atienda varias actividades
+> sin que una de ellas bloquee a las demás?
+
+Trabajaremos progresivamente con:
+
+1. Raspberry Pi Pico 2 W
+2. Thonny y MicroPython
+3. REPL
+4. Archivos
+5. Scheduler y Task
+6. Programación no bloqueante
+7. Comparación con Arduino
+8. Pub/Sub
+9. MQTT
+10. PicoROS
+11. Watchdog
+12. Flet como interfaz de monitoreo
 
 ---
 
-# 1. Conociendo la Raspberry Pi Pico 2 W
+# 1. Raspberry Pi Pico 2 W
 
 ## 1.1 ¿Qué es?
 
-La Raspberry Pi Pico 2 W es una placa con un microcontrolador que permite ejecutar programas directamente sobre el dispositivo.
+La Raspberry Pi Pico 2 W es una placa basada en un microcontrolador.
 
-A diferencia de un computador convencional, la Pico tiene recursos mucho más limitados, pero puede interactuar directamente con:
+Puede ejecutar un programa directamente y comunicarse con diferentes
+dispositivos mediante interfaces como:
 
 - GPIO
 - ADC
@@ -49,19 +46,26 @@ A diferencia de un computador convencional, la Pico tiene recursos mucho más li
 - WiFi
 - Bluetooth
 
+En esta clase nos concentraremos inicialmente en la programación y
+comunicación del sistema.
+
+![](https://www.raspberrypi.com/documentation/microcontrollers/images/pico2w-pinout.svg)
+
+
 ---
 
 # 2. Cuidados al trabajar con la Pico
 
-## 2.1 Evitar cortocircuitos
-
 Antes de conectar cualquier circuito:
 
-- Identificar GND.
-- Identificar 3V3.
-- Identificar VSYS/VBUS.
-- Revisar el pinout.
-- Verificar la conexión antes de alimentar.
+- identificar GND;
+- identificar las fuentes de alimentación;
+- revisar el pinout;
+- verificar la tensión del dispositivo;
+- verificar los niveles lógicos;
+- comprobar las conexiones antes de alimentar.
+
+## 2.1 Evitar cortocircuitos
 
 Nunca conectar directamente:
 
@@ -69,32 +73,27 @@ Nunca conectar directamente:
 3V3 ───── GND
 ````
 
-Esto produce un cortocircuito.
+Un cortocircuito puede dañar la placa.
 
----
-
-## 2.2 Evitar superficies conductoras
+## 2.2 Superficies
 
 No colocar la Pico directamente sobre:
 
 * papel aluminio;
 * superficies metálicas;
 * herramientas metálicas;
-* cables sueltos.
+* cables sin aislamiento.
 
-Se puede trabajar sobre:
+Es preferible trabajar sobre:
 
 * papel;
 * cartón;
 * madera;
 * plástico;
-* una superficie aislante.
-
-Una buena práctica es colocar la Pico sobre una base aislante.
+* otras superficies aislantes.
 
 ---
-
-# 3. Alimentación y niveles lógicos
+## 2.3 Alimentación y niveles lógicos
 
 La Pico trabaja con lógica de **3.3 V**.
 
@@ -111,36 +110,23 @@ Antes de conectar un dispositivo:
 
 ---
 
-# 4. Conectar la Pico al computador
 
-La conexión inicial se realiza mediante USB.
 
-El computador permite:
+# 3. Thonny y MicroPython
 
-* alimentar la Pico;
-* cargar programas;
-* comunicarse con la Pico;
-* utilizar el REPL.
+## 3.1 Thonny
 
----
+Thonny permite:
 
-# 5. Thonny
-
-Thonny es un entorno de desarrollo que facilita trabajar con MicroPython.
-
-Permite:
-
-* editar archivos;
-* cargar programas;
+* escribir programas;
+* cargarlos en la Pico;
 * ejecutarlos;
 * utilizar el REPL;
-* explorar archivos almacenados en la Pico.
+* administrar archivos de la placa.
 
 ---
 
-# 6. Python vs. MicroPython
-
-## Python
+# 4. Python vs. MicroPython
 
 Python normalmente se ejecuta en un computador:
 
@@ -154,8 +140,6 @@ Sistema operativo
 Hardware
 ```
 
-## MicroPython
-
 MicroPython se ejecuta directamente en el microcontrolador:
 
 ```text
@@ -165,102 +149,91 @@ MicroPython
  ↓
 Microcontrolador
  ↓
-GPIO / ADC / PWM / I²C
+Hardware
 ```
 
-MicroPython mantiene muchas características de Python, pero está diseñado para dispositivos con recursos limitados.
+MicroPython conserva muchas características de Python, pero está
+adaptado a dispositivos con recursos limitados.
 
-Por eso existen diferencias en:
+Por ello existen diferencias en:
 
 * módulos disponibles;
-* rendimiento;
 * memoria;
+* rendimiento;
 * acceso al hardware.
 
 ---
 
-# 7. El REPL
+# 5. REPL
 
 REPL significa:
 
 > Read — Eval — Print — Loop
 
-Permite ejecutar instrucciones directamente en la Pico.
+Permite ejecutar instrucciones directamente sobre la Pico.
 
 Por ejemplo:
 
 ```python
->>> x = 10
->>> x
-10
-
->>> x = 20
->>> x
-20
+x = 10
 ```
 
-Podemos cambiar el valor:
+Consultar:
 
 ```python
->>> x = "Hola"
->>> x
-'Hola'
+x
 ```
 
-Y observar inmediatamente el resultado.
+Cambiar:
+
+```python
+x = 20
+```
+
+Y volver a consultar:
+
+```python
+x
+```
+
+También podemos experimentar con objetos y funciones.
+
+El REPL es especialmente útil para:
+
+* explorar;
+* probar;
+* depurar;
+* comprobar rápidamente una idea.
 
 ---
 
-# 8. El REPL no es solamente para probar variables
-
-También podemos utilizarlo para explorar el hardware.
-
-Por ejemplo:
-
-```python
-from machine import Pin
-
-led = Pin("LED", Pin.OUT)
-
-led.value(1)
-```
-
-Después:
-
-```python
-led.value(0)
-```
-
-Esto permite experimentar rápidamente antes de escribir un programa completo.
-
----
-
-# 9. Archivos en la Pico
+# 6. Archivos
 
 La Pico puede almacenar archivos.
 
-Por ejemplo:
+Una estructura sencilla puede ser:
 
 ```text
 /
 ├── boot.py
 ├── main.py
-└── datos.txt
+└── config.txt
 ```
 
-## `main.py`
+## 6.1 `main.py`
 
-Es el programa principal que MicroPython ejecuta automáticamente al iniciar.
+Es el programa principal que MicroPython ejecuta al iniciar.
 
-## `boot.py`
+## 6.2 `boot.py`
 
 Se ejecuta durante el proceso de arranque.
 
-Debe utilizarse con cuidado porque un error aquí puede afectar el inicio del sistema.
+Debe utilizarse con cuidado porque un error puede afectar el inicio del
+sistema.
 
 ---
 
-# 10. Leer y escribir archivos
+## 6.3 Leer y escribir archivos
 
 Ejemplo:
 
@@ -287,49 +260,198 @@ Los archivos pueden utilizarse para almacenar:
 
 ---
 
-# 11. El problema de `input()` y `print()`
+# 7. Scheduler: la idea
 
-## `input()` bloquea
+Antes de programar el hardware debemos resolver un problema de diseño.
 
-En Python ya vimos que:
+Nuestro sistema tendrá varias actividades:
 
-```python
-input()
+```text
+leer sensores
+actualizar actuadores
+procesar eventos
+comunicarse
+enviar información
+actualizar estados
 ```
 
-puede bloquear el programa mientras espera una entrada.
+No queremos escribir un programa en el que una actividad tenga que
+esperar a que todas las demás terminen.
 
-En un sistema IoT esto puede ser un problema.
+La idea del Scheduler es organizar las actividades como tareas.
 
-Supongamos:
+```text
+                 Scheduler
+                     │
+       ┌─────────────┼─────────────┐
+       ▼             ▼             ▼
+    Task A         Task B        Task C
+       │             │             │
+    sensores       MQTT          estado
+```
+
+---
+
+# 8. Clase Task
+
+Una tarea puede representar:
+
+* una función;
+* un período de ejecución;
+* el instante de su última ejecución.
+
+Conceptualmente:
+
+```python
+class Task:
+
+    def __init__(self, function, period_ms):
+        self.function = function
+        self.period_ms = period_ms
+        self.last_run = 0
+```
+
+La tarea debe poder responder:
+
+> ¿Ya es momento de ejecutar mi función?
+
+---
+
+# 9. Clase Scheduler
+
+El Scheduler mantiene un conjunto de tareas.
+
+Conceptualmente:
+
+```text
+Scheduler
+│
+├── Task: sensores     100 ms
+├── Task: telemetría  1000 ms
+├── Task: estado        50 ms
+└── Task: MQTT         eventos
+```
+
+El Scheduler revisa las tareas y ejecuta aquellas que correspondan.
+
+La idea fundamental es:
+
+> **Una tarea no debe detener innecesariamente a las demás.**
+
+---
+
+# 10. ¿Por qué no ejecutar simplemente todo en `while True`?
+
+Una primera aproximación podría ser:
 
 ```python
 while True:
-    command = input()
     read_sensor()
+    update_motor()
+    send_data()
+```
+
+Esto funciona mientras todas las funciones sean rápidas.
+
+Pero aparece un problema cuando una función tarda demasiado.
+
+Por ejemplo:
+
+```python
+while True:
+    read_sensor()
+    input()
     update_motor()
 ```
 
-Mientras esperamos `input()`:
+Mientras `input()` espera:
 
 ```text
-sensor      ❌
-motor       ❌
-MQTT        ❌
-otras tareas ❌
+sensor       detenido
+motor        detenido
+MQTT         detenido
+otras tareas detenidas
 ```
 
-El sistema deja de responder.
+El sistema está bloqueado.
 
-
-##  `print()` es lento
-
-`print()` puede ser considerablemente más lento que operaciones simples.
-
-No utilizarlo continuamente dentro de tareas rápidas.
 ---
 
-# 12. El problema de los `sleep()` largos
+# 11. El problema de `input()`
+
+`input()` espera hasta que el usuario introduzca información.
+
+Por ejemplo:
+
+```python
+name = input("Nombre: ")
+```
+
+El programa no continúa hasta recibir la entrada.
+
+Esto es apropiado para un programa interactivo sencillo, pero no para
+un sistema que debe atender simultáneamente sensores, comunicación y
+actuadores.
+
+---
+
+# 12. El problema de `print()`
+
+`print()` no bloquea de la misma manera que `input()`, pero tampoco es
+una operación gratuita.
+
+Enviar grandes cantidades de información por consola puede consumir
+tiempo.
+
+Por ejemplo, debemos evitar:
+
+```python
+while True:
+    print(sensor_value)
+```
+
+especialmente en tareas que deben ejecutarse con mucha frecuencia.
+
+Una buena práctica es utilizar `print()` principalmente para:
+
+* diagnóstico;
+* depuración;
+* información relevante.
+
+Y no como mecanismo principal de funcionamiento del sistema.
+
+---
+
+# 13. Medir antes de optimizar
+
+No debemos asumir que una función es lenta.
+
+Debemos medir.
+
+Podemos medir el tiempo de ejecución utilizando microsegundos:
+
+```python
+start = time.ticks_us()
+
+function()
+
+elapsed = time.ticks_diff(
+    time.ticks_us(),
+    start
+)
+
+print(elapsed)
+```
+
+Esto permite identificar las operaciones que realmente consumen tiempo.
+
+Principio:
+
+> **Medir → identificar → optimizar → volver a medir.**
+
+---
+
+# 14.  El problema de los `sleep()` y la programación no bloqueante
 
 También podemos bloquear el programa con:
 
@@ -348,452 +470,294 @@ Esto puede ser especialmente problemático cuando tenemos:
 * interfaz;
 * seguridad.
 
----
 
-# 13. Estructura tradicional tipo Arduino
-
-Una estructura muy común es:
-
-```python
-while True:
-    leer_sensor()
-    actualizar_motor()
-    enviar_mqtt()
-    sleep(1)
-```
-
-Es sencilla, pero puede convertirse en un problema cuando las tareas tienen diferentes frecuencias.
+Una tarea periódica puede utilizar el tiempo transcurrido en lugar de
+esperar mediante un `sleep()` largo.
 
 Por ejemplo:
-
-```text
-sensor       cada 10 ms
-botón        continuamente
-motor        cada 20 ms
-MQTT         cuando llegue un mensaje
-telemetría   cada 1 s
-```
-
-No queremos que una tarea lenta bloquee a las demás.
-
----
-
-# 14. Programación no bloqueante
-
-La idea es que cada tarea haga una pequeña cantidad de trabajo y devuelva rápidamente el control.
-
-En lugar de:
-
-```python
-sleep(1)
-```
-
-podemos utilizar el tiempo transcurrido:
 
 ```python
 now = time.ticks_ms()
 
-if time.ticks_diff(now, last_update) >= 1000:
+if time.ticks_diff(now, last_update) >= 100:
     update()
     last_update = now
 ```
 
-El programa puede continuar realizando otras tareas mientras espera.
+Mientras no corresponde ejecutar `update()`, el programa puede continuar
+atendiendo otras actividades.
 
 ---
 
-# 15. Scheduler
+# 15. Comparación con Arduino
 
-Podemos organizar las tareas como:
+Muchos estudiantes ya conocen Arduino.
+
+La comparación nos permite entender diferentes formas de organizar
+un programa de microcontrolador.
+
+## Arduino tradicional
+
+```cpp
+void setup() {
+    // configuración
+}
+
+void loop() {
+    // programa principal
+}
+```
+
+Conceptualmente:
+
+```text
+setup()
+   ↓
+loop()
+   ↓
+loop()
+   ↓
+loop()
+   ↓
+...
+```
+
+## Nuestro enfoque
 
 ```text
 Scheduler
    │
-   ├── Task: leer sensores
-   ├── Task: actualizar motores
-   ├── Task: procesar botones
-   ├── Task: MQTT
-   └── Task: telemetría
+   ├── Task
+   ├── Task
+   ├── Task
+   └── Task
 ```
 
-Cada tarea tiene:
+La diferencia que nos interesa no es:
 
-* una función;
-* una frecuencia o período;
-* un estado.
+> Arduino es malo y Scheduler es bueno.
 
-Por ejemplo:
+Arduino también permite construir sistemas no bloqueantes.
 
-```python
-Task(
-    update_sensors,
-    period_ms=100
-)
-```
-
-La idea es que el Scheduler determine cuándo ejecutar cada tarea.
+La diferencia que queremos estudiar es la **forma de organizar las
+actividades del sistema**.
 
 ---
 
-# 16. Clase Task
+# 16. `micropython.schedule()` no es nuestro Scheduler
 
-Una posible abstracción:
+MicroPython dispone de mecanismos propios para programar callbacks,
+entre ellos `micropython.schedule()`.
 
-```python
-class Task:
-    def __init__(self, function, period_ms):
-        self.function = function
-        self.period_ms = period_ms
-        self.last_run = 0
+No debemos confundirlo con la clase `Scheduler` utilizada en este curso.
 
-    def update(self, now):
-        if time.ticks_diff(now, self.last_run) >= self.period_ms:
-            self.function()
-            self.last_run = now
-```
-
-El objetivo no es crear un framework complejo.
-
-El objetivo es comprender la idea:
-
-> Una tarea puede ejecutarse periódicamente sin detener todo el programa.
-
----
-
-# 17. Interrupciones
-
-
-
-Una interrupción permite responder a determinados eventos del hardware sin esperar al ciclo normal del programa.
-
-Ejemplo conceptual:
-
-```python
-button.irq(
-    trigger=Pin.IRQ_FALLING,
-    handler=button_pressed
-)
-```
-
-Cuando ocurre el evento:
+En esta etapa utilizaremos:
 
 ```text
-Botón
-  ↓
-interrupción
-  ↓
-handler
+Scheduler
+   ↓
+organización de tareas
 ```
+
+como una abstracción de diseño.
+
+Más adelante, si es necesario, estudiaremos mecanismos específicos
+de MicroPython.
 
 ---
 
-# 18. ¿Interrupción o Scheduler?
+# 17. Pub/Sub
 
-No todos los problemas necesitan interrupciones.
+Ahora podemos separar las actividades del sistema.
 
-### Scheduler
-
-Adecuado para:
-
-* leer sensores periódicamente;
-* actualizar motores;
-* enviar telemetría;
-* revisar estados.
-
-### Interrupciones
-
-Adecuadas para:
-
-* eventos muy rápidos;
-* pulsadores;
-* encoders;
-* señales externas.
-
-Una regla práctica:
-
-> Mantener las rutinas de interrupción muy cortas.
-
-Evitar dentro de una interrupción:
-
-* operaciones largas;
-* `print()`;
-* acceso complejo a archivos;
-* operaciones de red;
-* cálculos pesados.
-
-La interrupción puede registrar que ocurrió un evento y dejar el procesamiento para una tarea normal.
-[https://docs.micropython.org/en/latest/reference/isr_rules.html](https://docs.micropython.org/en/latest/reference/isr_rules.html)
-
----
-
-## `micropython.schedule`
-
-Las tareas largas se pueden delegar a `micropython.schedule`
-
----
-
-# 19. GPIO
-
-Un GPIO puede utilizarse como:
-
-* entrada;
-* salida.
-
-## Ejemplo de salida digital:
-
-```python
-from machine import Pin
-
-led = Pin("LED", Pin.OUT)
-
-led.value(1)
-```
-
-Apagar:
-
-```python
-led.value(0)
-```
-
----
-
-## Ejemplo de entrada digital
-
-Ejemplo:
-
-```python
-button = Pin(
-    15,
-    Pin.IN,
-    Pin.PULL_UP
-)
-```
-
-Leer:
-
-```python
-value = button.value()
-```
-
-Podemos utilizar el botón para cambiar el estado de un LED.
-
----
-
-# 20. Primer sistema IoT físico
-
-Construiremos:
+En lugar de:
 
 ```text
-Botón
-  ↓
-Pico
-  ↓
-Lógica
-  ↓
-LED
+sensor → función → actuador
 ```
 
-Ejemplo:
-
-```text
-Botón presionado
-      ↓
-    Pico
-      ↓
-LED encendido
-```
-
----
-
-# 21. Pub/Sub
-
-Hasta ahora podemos pensar en:
-
-```text
-Botón → función → LED
-```
-
-Pero en IoT queremos separar componentes.
-
-Podemos utilizar:
+podemos utilizar un modelo Publish/Subscribe:
 
 ```text
 Publisher
-     │
-     ▼
-   Topic
-     │
-     ▼
+    │
+    ▼
+  Topic
+    │
+    ▼
 Subscriber
 ```
 
-Por ejemplo:
+Un componente publica información.
+
+Otro componente se suscribe a esa información.
+
+No necesitan conocerse directamente.
+
+---
+
+# 18. MQTT
+
+MQTT implementa el modelo Publish/Subscribe.
+
+Los elementos principales son:
+
+* Broker
+* Publisher
+* Subscriber
+* Topic
+* Payload
+
+Ejemplo:
 
 ```text
 Pico
  │
  │ publish
  ▼
-cararm/led
+Broker
  │
  │ subscribe
  ▼
-Aplicación
+Flet
 ```
 
 ---
 
+# 19. PicoROS
 
-# 22. Integrar GPIO y MQTT
+Utilizaremos una versión mínima de PicoROS para organizar la
+comunicación del sistema.
 
-Podemos construir:
+La idea es disponer de:
 
 ```text
-                    MQTT
-                     │
-                     ▼
-                 Raspberry
-                   Pi Pico
-                     │
-             ┌───────┴───────┐
-             ▼               ▼
-           LED             Botón
-             │               │
-             └───────┬───────┘
-                     ▼
-                    MQTT
+Publisher
+Subscriber
+Topic
+Message
 ```
+
+sin necesidad de introducir todavía todo ROS 2.
+
+La arquitectura permite separar:
+
+```text
+productor de información
+        │
+        ▼
+      Topic
+        │
+        ▼
+consumidor de información
+```
+
+---
+
+# 20. Watchdog
+
+El sistema incluye un Watchdog para detectar problemas en el
+funcionamiento del programa.
+
+El Watchdog puede utilizarse para detectar situaciones en las que el
+programa deja de responder correctamente.
+
+Conceptualmente:
+
+```text
+Programa
+   │
+   │ alimenta Watchdog
+   ▼
+Watchdog
+   │
+   ├── programa funcionando
+   │
+   └── programa detenido
+            ↓
+          reset
+```
+
+El objetivo es aumentar la robustez del sistema.
+
+---
+
+# 21. Publicación de información del Watchdog
+
+El sistema puede publicar información relacionada con su funcionamiento.
 
 Por ejemplo:
 
 ```text
-cararm/led/set
+debug/watchdog
 ```
 
-Payload:
+El mensaje puede contener información como:
 
 ```json
 {
-    "value": 1
+    "uptime_s": 120,
+    "status": "ok"
 }
 ```
 
-Y para informar el estado:
-
-```text
-cararm/led/state
-```
+La información puede ser recibida por una aplicación externa.
 
 ---
 
-# 23. Teclado/control remoto IR
+# 22. Flet como monitor
 
-Un control remoto IR permite generar diferentes comandos.
-
-Por ejemplo:
+La aplicación Flet actuará inicialmente como un monitor.
 
 ```text
-Control IR
-    ↓
-Receptor IR
-    ↓
 Pico
-    ↓
-Código del botón
-    ↓
-Acción
+  │
+  │ publish
+  ▼
+Comunicación
+  │
+  ▼
+Flet
+  │
+  ▼
+Interfaz
 ```
 
-Cada botón puede representar una operación:
+La interfaz debe permitir visualizar:
 
-```text
-↑      avanzar
-↓      retroceder
-←      girar izquierda
-→      girar derecha
-OK     detener
-1      función 1
-2      función 2
-...
-```
+* conexión;
+* mensajes recibidos;
+* tópico;
+* contenido del mensaje;
+* estado del Watchdog.
 
 ---
 
-# 24. Taller: Control de acceso
+# 23. Actividad
 
-Construir un sistema de control de acceso.
-
-## Componentes
-
-* Raspberry Pi Pico 2 W
-* Receptor IR
-* Control remoto
-* LED
-* Pulsador
-
-## Comportamiento
-
-El usuario debe introducir una secuencia utilizando el control remoto.
-
-Ejemplo:
-
-```text
-1 → 2 → 3 → OK
-```
-
-Si la secuencia es correcta:
-
-```text
-LED → acceso permitido
-```
-
-Si es incorrecta:
-
-```text
-LED → acceso denegado
-```
+Aumentar la aplicación Flet del taller anterior, para que permita visualizar los mensajes publicados
+por el Watchdog de PicoROS de su respectivo grupo.
 
 ---
 
-# 25. Prácticas
+# 24. Mini-reto
 
-1. **Controlar un LED desde Flet**
-   Desarrollar una interfaz en Flet que permita encender y apagar un LED conectado a la Raspberry Pi Pico 2 W.
+Modificar la interfaz para mostrar información de manera más útil.
 
-2. **Leer el estado de un botón desde Flet**
-   Desarrollar una interfaz en Flet que permita visualizar el estado de un botón conectado a la Raspberry Pi Pico 2 W.
-
-3. **Leer un control remoto IR desde Flet**
-   Conectar un receptor infrarrojo a la Raspberry Pi Pico 2 W y desarrollar una interfaz en Flet que permita visualizar los códigos recibidos al presionar los botones del control remoto.
 
 ---
 
-### Taller — Sistema de control de acceso y alarma
+# 25. Preguntas para discutir
 
-Desarrollar un **sistema de control de acceso** utilizando la Raspberry Pi Pico 2 W, un botón, un LED y un control remoto IR. El sistema deberá contar además con una interfaz en Flet que permita visualizar y simular el estado de la alarma.
+1. ¿Qué ocurre si una tarea tarda demasiado?
+2. ¿Por qué `input()` es problemático en un sistema IoT?
+3. ¿Por qué debemos limitar el uso de `print()` en tareas rápidas?
+4. ¿Qué diferencia existe entre una tarea y una interrupción?
+5. ¿Qué problema intenta solucionar un Scheduler?
+6. ¿Qué diferencia existe entre nuestro `Scheduler` y
+   `micropython.schedule()`?
+7. ¿Qué ventajas tiene Pub/Sub?
+8. ¿Por qué MQTT utiliza un Broker?
+9. ¿Qué información debería publicar un Watchdog?
+10. ¿Qué ocurre si la interfaz Flet deja de recibir mensajes?
 
-#### Requisitos
-
-* **Sensor de puerta:** utilizar un botón para simular el estado de la Puerta 1:
-
-  * `0` → puerta cerrada.
-  * `1` → puerta abierta.
-
-* **Indicador de alarma:** utilizar un LED para indicar el estado de la alarma:
-
-  * LED apagado → alarma desactivada.
-  * LED encendido → alarma activada.
-
-* **Activación y desactivación:** utilizar el control remoto IR para introducir una contraseña que permita activar o desactivar la alarma.
-
-* **Detección de intrusión:** cuando la alarma esté activada, si la puerta se abre, el sistema deberá disparar la alarma.
-
-* **Contraseña incorrecta:** si se introduce una contraseña incorrecta, el sistema deberá disparar la alarma.
-
-* **Simulación en Flet:** la interfaz deberá mostrar el estado de la puerta y de la alarma, y deberá **simular visual y/o sonoramente el disparo de la alarma**.
-
-* **Comunicación:** los eventos importantes del sistema deberán poder visualizarse en la interfaz.
-
-
-
-**Mini-reto opcional:** incorporar un contador de intentos fallidos y bloquear temporalmente el sistema después de varios intentos incorrectos, el LED titila mientras está bloqueado.
