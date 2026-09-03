@@ -6,7 +6,7 @@
  | 3 | MQTT + Flet  | MQTT  |  | 
  | 4 | Thonny, PicoROS, WatchDog | Container | Raspberry Pi Pico 2 W  |
  | 4 | WiFi, GPIO, Scheduler, Task, Pub/Sub, Node | Botones, LEDs, Teclados | LED, IR sensor/control | 
- | 5 | ADC, voltaje, corriente, batería | Sliders, Perillas | Power Bank o (18650+TP4056+SW_6pins+xl6009), 2x(resistencias 5 kΩ), 2x(Sensor de corriente INA226), Potenciometro | 
+ | 5 | ADC, voltaje, corriente, batería | Sliders, Perillas | Power Bank o (18650+TP4056+SW_6pins+XL6009), 2x(resistencias 5 kΩ), 2x(Sensor de corriente INA226), Potenciometro | 
  | 6 | PWM, motores, carro, cinemática | Gemelo del Carro | Chasis pequeño, Puente H para 2 motores, 2x(Motores Amarillos + Ruedas), 2xRuedas locas  | 
  | 7 | Servos, MeArm, cinemática | Gemelo del MeArm | 2xServos, MeArm+tornillos | 
  | 8 | I²C | Gráficas de datos | OLED  | 
