@@ -205,53 +205,7 @@ El **diodo Schottky** tiene una **menor caída de tensión directa**. Las refere
 > Los valores de la tabla son valores nominales de referencia. Para un diseño real debemos consultar siempre el **datasheet del fabricante específico**, ya que las características pueden variar entre fabricantes y condiciones de operación.
 
 
-
----
-
-##  El diodo en nuestro sistema de alimentación
-
-Utilizaremos el diodo para ayudar a aislar la alimentación externa de la alimentación proveniente del USB.
-
-Conceptualmente:
-
-```text
-Fuente externa
-     │
-     ▼
-  1N5819
-     │
-     ▼
-   VSYS
-     │
-     ▼
-   Pico
-```
-
-El diodo permite que la energía llegue a la Pico, mientras dificulta que la corriente circule en el sentido contrario.
-
-Sin embargo, debemos recordar que el diodo introduce una caída de tensión:
-
-$$
-V_{Pico}\approx V_{fuente}-V_F
-$$
-
-Por lo tanto, el diseño de la alimentación debe considerar tanto la **tensión disponible** como la **corriente consumida por la carga**.
-
----
-
-### 🧠 Idea clave
-
-Un diodo no se selecciona simplemente por su nombre.
-
-> **La referencia correcta depende de la tensión, la corriente, la caída de tensión y las condiciones de funcionamiento del circuito.**
-
-En nuestro caso:
-
-**18650 → 1N5819 → VSYS → Raspberry Pi Pico**
-
-
-
-
+El diodo en nuestro sistema de alimentación ayuda a aislar la alimentación externa de la alimentación proveniente del USB.
 
 
 
@@ -280,104 +234,38 @@ Cuando conectamos la Raspberry Pi Pico al computador mediante USB, el computador
 El voltaje de USB llega al pin **VBUS**.
 
 ```text
-PC
- │
- │ USB
- ▼
-VBUS ─────► Pico
-             │
-             ▼
-          Regulador
-             │
-             ▼
-           3.3 V
+      PC
+      │ USB
+      │ 
+      ▼ microUSB
+PICO─────────┐
+│    VBUS    │
+│     │      │
+│     ▼      │
+│   Diodo    │
+│   interno  │
+│     │      │
+│     ▼      │
+│    VSYS ◀──── Diodo  ◀──── Fuente
+│     │      │  externo       externa
+│     │      │
+│     ▼      │
+│ Regulador  │
+│     │      │
+│     ▼      │
+│   3.3 V    │
+⋮             ⋮
 ```
 
 **VBUS** corresponde a la alimentación proveniente del conector USB.
 
----
-
-## Alimentación mediante VSYS
-
 La Pico también puede alimentarse mediante el pin **VSYS**.
 
-Esto permite utilizar una fuente externa en lugar del USB:
-
-```text
-Fuente externa
-     │
-     ▼
-   VSYS
-     │
-     ▼
-    Pico
-     │
-     ▼
- Regulador
-     │
-     ▼
-   3.3 V
-```
-
-VSYS es, por tanto, un punto de entrada para alimentar la placa.
-
----
-
-## ¿Qué sucede si conectamos simultáneamente la batería y el USB?
-
-Esta situación es importante en nuestro robot.
-
-Supongamos que la Pico está alimentada externamente y conectamos el USB al computador:
-
-```text
-Fuente externa
-      │
-      ▼
-    VSYS ─────► Pico
-      ▲
-      │
-     USB
-      ▲
-      │
-      PC
-```
-
-Debemos evitar que la alimentación externa encuentre un camino de retorno hacia el USB y hacia el computador.
-
-Para nuestra alimentación externa utilizaremos un **diodo Schottky**, que tiene una caída de tensión relativamente baja.
-
-```text
-Fuente externa
-      │
-      ▼
-  Schottky
-      │
-      ▼
-    VSYS
-      │
-      ▼
-     Pico
-```
-
-El diodo permite que la corriente circule hacia la Pico y ayuda a impedir la circulación en sentido contrario.
-
-> ⚠️ La caída de tensión del diodo debe tenerse en cuenta al diseñar la alimentación.
-
----
-
-## El regulador de 3.3 V
+Esto permite utilizar una fuente externa en lugar del USB
 
 La Raspberry Pi Pico dispone de un regulador de tensión que permite obtener aproximadamente **3.3 V** para la electrónica de la placa.
 
-Por eso debemos distinguir entre:
-
-* **VBUS** → alimentación proveniente del USB.
-* **VSYS** → entrada de alimentación del sistema.
-* **3.3 V** → tensión regulada utilizada por la lógica de la Pico.
-
 Los GPIO de la Raspberry Pi Pico trabajan con **lógica de 3.3 V**.
-
-Por tanto:
 
 > **No debemos aplicar 5 V directamente a un GPIO.**
 
@@ -391,99 +279,40 @@ La corriente que consume la Pico no es constante. Depende de lo que esté ejecut
 
 Como referencia didáctica, podemos pensar en los siguientes órdenes de magnitud:
 
-| Situación                                       |                       Corriente aproximada |
-| ----------------------------------------------- | -----------------------------------------: |
-| Pico ejecutando un programa sencillo, sin Wi-Fi |                                  ~20–30 mA |
-| Pico con Wi-Fi activo                           |                                 ~40–100 mA |
-| Wi-Fi transmitiendo/recibiendo                  |           Puede presentar picos superiores |
-| Pico + varios LEDs en GPIO                      | Consumo de la Pico + corriente de los LEDs |
-| Pico + sensores/módulos externos                |                     Depende de cada módulo |
+| Componente        | Consumo típico |      Pico / arranque |
+| ----------------- | -------------: | -------------------: |
+| Pico W + Wi-Fi    |      80–150 mA |          ~150–200 mA |
+| OV7670            |       20–50 mA |               ~50 mA |
+| OLED I²C          |       10–30 mA |               ~30 mA |
+| Servo ×2          | 100–300 mA c/u |  **500–1000 mA c/u** |
+| Motor amarillo ×2 | 150–300 mA c/u | **500–1000+ mA c/u** |
+| **Total**         | **~0.6–1.3 A** |         **~2–3.5 A** |
 
-Estos valores son **orientativos y no deben utilizarse para dimensionar una fuente sin realizar mediciones**.
+Los valores de motores y servos dependen muchísimo del modelo, carga mecánica y tensión. En particular, el consumo de bloqueo (stall) de los motores puede ser varias veces el consumo mientras giran libremente. Estos valores son **orientativos y no deben utilizarse para dimensionar una fuente sin realizar mediciones**.
 
-### 💡 ¿Por qué aumenta la corriente?
 
-Cada componente conectado a la Pico puede agregar consumo.
 
-Por ejemplo, si conectamos un LED:
+## 📝 Crear `main.py`
 
-```text
-GPIO ── Resistencia ──► LED ──► GND
-```
-
-el LED consume corriente adicional.
-
-Si tenemos varios LEDs:
+El objetivo ahora es que el programa del taller anterior que prende y apaga el LED quede almacenado en el Pico como:
 
 ```text
-GPIO ──► LED
-GPIO ──► LED
-GPIO ──► LED
-GPIO ──► LED
+main.py
 ```
-
-la corriente total aumenta.
-
-Por esta razón, cuando diseñamos el sistema de alimentación debemos considerar:
-
-$$
-I_{total}=I_{Pico}+I_{sensores}+I_{LEDs}+I_{servos}+I_{motores}+\cdots
-$$
-
-Y la potencia requerida puede estimarse mediante:
-
-$$
-P=VI
-$$
-
----
-
-## 🔬 Medir en lugar de suponer
-
-Una de las ideas principales de este taller es que **el consumo eléctrico se puede medir**.
-
-Podemos utilizar un multímetro para medir corriente y, posteriormente, utilizar un dispositivo como el **INA226** para realizar mediciones de manera automática.
-
-Esto nos permitirá posteriormente comparar:
-
-```text
-        Pico
-         │
-         │ consumo
-         ▼
-      INA226
-         │
-         ▼
-   PicoROS → Flet
-```
-
-En una práctica posterior podremos medir el consumo de:
-
-* Pico
-* Wi-Fi
-* LEDs
-* Servos
-* Motores
-
-y observar cómo cambia la corriente cuando aumenta la carga.
-
----
-
-### 🧠 Idea clave
-
-La fuente de alimentación debe ser capaz de proporcionar la **tensión adecuada** y la **corriente necesaria** para todas las cargas.
-
-> **Voltaje correcto + corriente suficiente = alimentación adecuada**
+El taller es comprobar que el Pico puede funcionar de manera autónoma, desconectado fisicamente del computador.
 
 
-# 5. 📐 ¿Qué es un ADC?
+# 5. ¿Qué es un ADC?
 
-El **ADC (Analog-to-Digital Converter)** convierte una señal de voltaje analógica en un valor digital que el microcontrolador puede procesar.
+Muchos sensores no entregan una señal on/off sino un valor tipo `float` como temperatura, humedad, presión. En física estas magnitudes se conocen como escalares. Hay sensores que pueden convertir este valor en un voltaje análogo. El **ADC (Analog-to-Digital Converter)** convierte un el voltaje análogo en un valor digital que el microcontrolador puede procesar.
 
 Conceptualmente:
 
 ```text
-Voltaje analógico
+     Sensor
+       │
+       ▼
+Voltaje análogo
        │
        ▼
       ADC
@@ -495,7 +324,7 @@ Valor digital
    Programa
 ```
 
-En el Raspberry Pi Pico podemos utilizar una entrada ADC para medir un voltaje.
+En el Raspberry Pi Pico tiene podemos utilizar una entrada ADC para medir un voltaje.
 
 Pero hay una condición fundamental:
 
@@ -737,74 +566,6 @@ En Flet podremos mostrar:
 ```
 
 ---
-
-# 12. 📝 Crear `main.py`
-
-El objetivo final es que el programa quede almacenado en el Pico como:
-
-```text
-main.py
-```
-
-El programa debe:
-
-* Inicializar el ADC.
-* Leer periódicamente la batería.
-* Calcular el voltaje.
-* Publicarlo.
-* Repetir el proceso.
-
-Una estructura conceptual sería:
-
-```python
-while True:
-    adc_value = read_adc()
-    battery_voltage = calculate_voltage(adc_value)
-    publish(battery_voltage)
-    sleep(...)
-```
-
-El código completo será desarrollado durante el taller.
-
----
-
-# 13. 🚀 El Pico debe funcionar sin Thonny
-
-Una parte importante del taller es comprobar que el Pico puede funcionar de manera autónoma.
-
-Mientras estamos desarrollando:
-
-```text
-PC
- │
- ▼
-Thonny
- │
- ▼
-Pico
-```
-
-Pero una vez que `main.py` está guardado correctamente en el Pico:
-
-```text
-Pico
- │
- └── main.py
-       │
-       ▼
-    ADC → PicoROS → Flet
-```
-
-### Prueba final
-
-1. Ejecutar el programa desde Thonny.
-2. Verificar que la medición es correcta.
-3. Guardar `main.py` en el Pico.
-4. Reiniciar el Pico.
-5. Desconectar Thonny.
-6. Verificar que el Pico continúa midiendo y publicando el voltaje.
-
-> 🎯 **Reto:** el sistema debe continuar funcionando aunque Thonny ya no esté conectado.
 
 ---
 
