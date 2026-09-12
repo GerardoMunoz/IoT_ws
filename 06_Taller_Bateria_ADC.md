@@ -173,6 +173,89 @@ El cargador y el sistema de alimentación cumplen funciones diferentes.
 
 
 
+
+
+
+
+
+
+##  El diodo
+
+Un **diodo** es un componente electrónico que permite que la corriente circule principalmente en **una sola dirección**.
+
+Podemos imaginarlo como una válvula que solo deja pasar el flujo en una dirección indicada por la frjanja blanca.
+
+![](https://panamahitek.com/wp-content/uploads/2013/05/diodo.jpg)
+
+Un diodo real no es un interruptor perfecto. Cuando conduce presenta una caída de voltaje (de la cual hablaremos) y cuando está en inversa existe una pequeña corriente de fuga (menor a 0.5mA en nuestro caso).
+
+El **diodo Schottky** tiene una **menor caída de tensión directa**. Las referencias 1N5817, 1N5818, 1N5819 a 1 amperio bajan el voltaje en 0.45 V, 0.55 V, 0.60 V respectivamente. 
+
+
+| Referencia | Tipo     | \(V_{RRM}\) máx. | Corriente directa | Encapsulado típico | Comentario                               |
+| ---------- | -------- | ---------------: | ----------------: | ------------------ | ---------------------------------------- |
+| **1N5817** | Schottky |             20 V |               1 A | DO-41              | Baja tensión inversa                     |
+| **1N5818** | Schottky |             30 V |               1 A | DO-41              | Versión intermedia                       |
+| **1N5819** | Schottky |         **40 V** |               1 A | DO-41              | Muy común y adecuada para nuestro taller |
+| **1N5820** | Schottky |             20 V |               3 A | DO-201             | Mayor capacidad de corriente             |
+| **1N5821** | Schottky |             30 V |               3 A | DO-201             | Mayor capacidad de corriente             |
+| **1N5822** | Schottky |         **40 V** |               3 A | DO-201             | Alta corriente                           |
+| **SS14**   | Schottky |             40 V |               1 A | SMA                | Alternativa SMD al 1N5819                |
+
+> Los valores de la tabla son valores nominales de referencia. Para un diseño real debemos consultar siempre el **datasheet del fabricante específico**, ya que las características pueden variar entre fabricantes y condiciones de operación.
+
+
+
+---
+
+##  El diodo en nuestro sistema de alimentación
+
+Utilizaremos el diodo para ayudar a aislar la alimentación externa de la alimentación proveniente del USB.
+
+Conceptualmente:
+
+```text
+Fuente externa
+     │
+     ▼
+  1N5819
+     │
+     ▼
+   VSYS
+     │
+     ▼
+   Pico
+```
+
+El diodo permite que la energía llegue a la Pico, mientras dificulta que la corriente circule en el sentido contrario.
+
+Sin embargo, debemos recordar que el diodo introduce una caída de tensión:
+
+$$
+V_{Pico}\approx V_{fuente}-V_F
+$$
+
+Por lo tanto, el diseño de la alimentación debe considerar tanto la **tensión disponible** como la **corriente consumida por la carga**.
+
+---
+
+### 🧠 Idea clave
+
+Un diodo no se selecciona simplemente por su nombre.
+
+> **La referencia correcta depende de la tensión, la corriente, la caída de tensión y las condiciones de funcionamiento del circuito.**
+
+En nuestro caso:
+
+**18650 → 1N5819 → VSYS → Raspberry Pi Pico**
+
+
+
+
+
+
+
+
 ## La carga: alimentación de la Raspberry Pi Pico
 
 La batería es la fuente de energía y la Raspberry Pi Pico es una de las **cargas** que debemos alimentar.
