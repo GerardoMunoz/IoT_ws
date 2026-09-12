@@ -292,7 +292,7 @@ Los valores de motores y servos dependen muchísimo del modelo, carga mecánica 
 
 
 
-## 📝 Crear `main.py`
+##  Crear `main.py`
 
 El objetivo ahora es que el programa del taller anterior que prende y apaga el LED quede almacenado en el Pico como:
 
@@ -304,7 +304,7 @@ El taller es comprobar que el Pico puede funcionar de manera autónoma, desconec
 
 # 5. ¿Qué es un ADC?
 
-Muchos sensores no entregan una señal on/off sino un valor tipo `float` como temperatura, humedad, presión. En física estas magnitudes se conocen como escalares. Hay sensores que pueden convertir este valor en un voltaje análogo. El **ADC (Analog-to-Digital Converter)** convierte un el voltaje análogo en un valor digital que el microcontrolador puede procesar.
+Vimos que el GPIO podia leer un 1 o un 0, estas se conocesn como **señales digitales**. Pero en física hay magnitudes escalares como: temperatura, humedad, presión. Hay sensores que pueden convertir este escalar en un voltaje **análogo** a la magnitud, estas se conocen como **señales análogas**. El **ADC (Analog-to-Digital Converter)** convierte un el voltaje análogo en un valor digital que el microcontrolador puede procesar.
 
 Conceptualmente:
 
@@ -324,28 +324,20 @@ Valor digital
    Programa
 ```
 
-En el Raspberry Pi Pico tiene podemos utilizar una entrada ADC para medir un voltaje.
+En el Raspberry Pi Pico tiene disponible 3 entradas ADC para medir un voltaje (ADC0, ADC1, ADC2).
 
-Pero hay una condición fundamental:
 
-> **El voltaje aplicado al ADC debe permanecer dentro del rango permitido por el Pico.**
+> **El voltaje aplicado al ADC debe ser entre 0 y 3.3V.**
 
 Por esta razón, no conectaremos directamente la batería al ADC.
 
 ---
 
-# 6. 📏 Divisor de voltaje
+##  Divisor de voltaje
 
 Un divisor de voltaje utiliza dos resistencias para obtener una fracción del voltaje de entrada.
 
-```text
-              R1
-Vin ─────────ΩΩΩΩ─────┬──── Vout
-                       │
-                      R2
-                       │
-                      GND
-```
+![](images/Divisor.png)
 
 El voltaje de salida es:
 
@@ -359,28 +351,8 @@ $$
 V_{in}=V_{out}\frac{R_1+R_2}{R_2}
 $$
 
-## ¿Por qué lo necesitamos?
 
-Supongamos que queremos medir la batería:
-
-```text
-18650
-  │
-  │
-  ▼
-Divisor de voltaje
-  │
-  ▼
-ADC del Pico
-```
-
-El divisor reduce el voltaje de la batería antes de llegar al ADC.
-
-El Pico mide `Vout` y nuestro programa calcula nuevamente el voltaje de la batería.
-
----
-
-# 7. 🧪 Primera medición: batería con multímetro
+## Primera medición: batería con multímetro
 
 Antes de conectar la batería al Pico:
 
@@ -421,9 +393,9 @@ Registre el resultado:
 
 ---
 
-# 8. 🔧 Construcción del divisor de voltaje
+## Construcción del divisor de voltaje
 
-Seleccione los valores de `R1` y `R2` indicados por el profesor.
+Seleccione los valores de `R1=5kΩ` y `R2=5kΩ`.
 
 Monte el circuito:
 
@@ -456,7 +428,7 @@ Compare ambos valores.
 
 ---
 
-# 9. 🧑‍💻 Lectura del ADC con el Pico
+# Lectura del ADC con el Pico
 
 Ahora conectaremos el punto central del divisor a una entrada ADC del Raspberry Pi Pico.
 
