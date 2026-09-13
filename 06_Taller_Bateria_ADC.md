@@ -40,21 +40,20 @@ Un **protoboard** se organiza en ileras de materiales condutores para poder inte
 Las conexiones internas normalmente están organizadas de esta manera:
 
 ```text
-  +  ────────────────────────────────
-  -  ────────────────────────────────
-
-      a  b  c  d  e    f g  h  i  j
-      ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
-      ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
-      ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
-
+     ────────────────────────────────
+     ────────────────────────────────
 
       ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
       ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
       ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
 
-  -  ────────────────────────────────
-  +  ────────────────────────────────
+
+      ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
+      ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
+      ｜ ｜ ｜ ｜ ｜   ｜ ｜ ｜ ｜ ｜
+
+     ────────────────────────────────
+     ────────────────────────────────
 ```
 
 
@@ -339,51 +338,26 @@ Un divisor de voltaje utiliza dos resistencias para obtener una fracción del vo
 
 ![](images/Divisor.png)
 
+Seleccione los valores de `R1=R2=5kΩ`.
+
 El voltaje de salida es:
 
 $$
 V_{out}=V_{in}\frac{R_2}{R_1+R_2}
 $$
 
-Por lo tanto:
-
-$$
-V_{in}=V_{out}\frac{R_1+R_2}{R_2}
-$$
-
-
 ## Primera medición: batería con multímetro
 
 Antes de conectar la batería al Pico:
 
-### Paso 1
-
-Configure el multímetro para medir **voltaje DC**.
-
-### Paso 2
-
-Identifique:
-
-* Terminal positivo (+)
-* Terminal negativo (-)
-
-### Paso 3
-
-Mida la batería.
-
-```text
-          Multímetro
-
-        ┌─────────────┐
-   + ───┤             │
-18650   │      V      │
-   - ───┤             │
-        └─────────────┘
-```
+* Configure el multímetro para medir **voltaje DC**.
+* Conecte:
+   * Terminal negativo (-) del multimetro a out- que es la tierra del circuito digital.
+   * Terminal positivo (+) del multimetro a out+
 
 Registre el resultado:
 
-> **Voltaje medido de la batería: ______ V**
+> **Voltaje medido del TP4056: ______ V**
 
 ### Preguntas
 
@@ -391,24 +365,8 @@ Registre el resultado:
 2. ¿Por qué puede ser diferente?
 3. ¿Qué nos dice este valor sobre el estado de carga?
 
----
 
-## Construcción del divisor de voltaje
-
-Seleccione los valores de `R1=5kΩ` y `R2=5kΩ`.
-
-Monte el circuito:
-
-```text
-              R1
-+18650 ──────ΩΩΩΩ──────┬────── ADC
-                       │
-                      R2
-                       │
-                      GND
-```
-
-### Antes de conectar el Pico
+## Antes de conectar el Pico
 
 Calcule:
 
@@ -428,78 +386,173 @@ Compare ambos valores.
 
 ---
 
-# Lectura del ADC con el Pico
+## Lectura del ADC con el Pico
 
-Ahora conectaremos el punto central del divisor a una entrada ADC del Raspberry Pi Pico.
+El conversor ADC convierte el voltaje entre 0 y 3.3V en un numero entero de 16bits, es decir entre 0 y 65535. Para conventir el numero dado al voltaje, habria que multiplicarlo por 3.3 y luego dividirlo entre 65536.
 
-```text
-18650
-  │
-  ▼
- R1
-  │
-  ├──────── ADC
-  │
- R2
-  │
-  ▼
- GND
-```
-
-El programa debe:
-
+La clase `AnalogIn` realiza lo siguiente:
 1. Configurar el ADC.
+2. Se repite periodicamente
 2. Leer el ADC.
-3. Convertir la lectura en voltaje.
-4. Calcular el voltaje de la batería.
-5. Mostrar/publicar el resultado.
+3. Publicar el valor.
 
-Conceptualmente:
+La cual puede ser usada para publicar información de sensores análogos.
 
 ```text
-ADC
- ↓
-Vout
- ↓
-Vbattery
+Sensor
+   │
+   ▼
+AnalogIn
+   │
+   │  valor ADC
+   ▼
+PicoROS / MQTT
+   │
+   ▼
+Flet
+   │
+   ▼
+Voltaje / Temperatura / etc.
+```
+
+```python
+from machine import ADC
+from task import Task
+
+
+class AnalogIn(Task):
+
+    def __init__(
+        self,
+        scheduler,
+        pubsub,
+        gpio,
+        period_ms=5000,
+    ):
+        """
+        gpio: string que identifica el GPIO.
+              Ejemplo: "GP26", "GP27", "GP28"
+
+        Publica el valor del ADC en:
+
+              AnalogIn_u16/<gpio>
+
+        Payload:
+
+              {"value": 12345}
+
+        period_ms:
+              tiempo entre publicaciones.
+        """
+
+        self.pubsub = pubsub
+        self.gpio = gpio
+
+        # Extraer número del GPIO
+        pin_number = int(gpio.replace("GP", ""))
+
+        # Configurar ADC
+        self.adc = ADC(pin_number)
+
+        # Topic
+        self.topic = "AnalogIn_u16/" + gpio
+
+        print("AnalogIn initialized", self.topic)
+
+        # Inicializar Task
+        super().__init__(
+            scheduler,
+            period_ms=period_ms
+        )
+
+
+    def update(self):
+
+        value = self.adc.read_u16()
+
+        msg = {
+            "value": value
+        }
+
+        print(
+            "AnalogIn_u16:",
+            self.gpio,
+            value
+        )
+
+        self.pubsub.publish(
+            self.topic,
+            msg
+        )
+
+
+if __name__ == "__main__":
+    from watchdog_task import WatchdogTask
+    from scheduler import Scheduler
+    from wifi_manager import WiFiManager
+    from node import Node
+    from pubsub_mqtt import PubSubMQTT
+
+
+    SSID="Ejemplo"       # Change to your WiFi
+    PSW_FILE=".env"
+    MQTT_BROKER="broker.hivemq.com"
+    NODE_NAME='emb_node_0'
+    PREFIX='UDFJC/iot_ws/robot0/'
+
+    with open(PSW_FILE) as f:
+        password = f.read().strip()
+
+    scheduler = Scheduler()
+    print('Scheduler')
+
+    wifi = WiFiManager(
+        ssid=SSID,
+        password=password
+    )
+
+    node = Node(
+        prefix=PREFIX,
+        node_name=NODE_NAME
+    )
+
+    PubSubMQTT(
+        client_id=NODE_NAME,
+        broker=MQTT_BROKER,
+        scheduler=scheduler,
+        node=node,
+        period_ms=100,
+        prefix=PREFIX
+    )
+
+    WatchdogTask(
+        scheduler=scheduler,
+        pubsub=node,
+        wifi=wifi,
+        period_ms=9000
+    )
+
+    print('Initialized')
+
+    AnalogIn(
+        scheduler,
+        node,
+        "GP26"
+    )
+
+    scheduler.run()
 ```
 
 ---
 
-# 10. 🔢 De ADC a voltaje
-
-El ADC entrega un valor digital.
-
-El programa debe convertir ese valor en un voltaje.
-
-De manera conceptual:
-
-$$
-V_{ADC} =
-\frac{ADC}{ADC_{max}} V_{ref}
-$$
-
-Luego utilizamos el divisor:
-
-$$
-V_{battery}
-=
-V_{ADC}
-\frac{R_1+R_2}{R_2}
-$$
-
-Los valores concretos de `ADCmax`, `Vref`, `R1` y `R2` serán los utilizados en la implementación del taller.
-
----
-
-# 11. 📡 Publicar el voltaje
+# 6 Publicar el voltaje
 
 Una vez que el Pico puede medir correctamente la batería, vamos a convertirlo en un pequeño nodo IoT.
 
 El flujo será:
 
 ```text
-              18650
+              TP4056
                  │
                  ▼
           Voltage divider
@@ -517,19 +570,9 @@ El flujo será:
                 Flet
 ```
 
-El dato publicado puede tener, por ejemplo, el tópico:
 
-```text
-battery/voltage
-```
 
-y como contenido:
-
-```text
-4.08
-```
-
-En Flet podremos mostrar:
+En Flet podremos convertir el numero de 16 bits en el votaje de la batería y mostrar:
 
 ```text
 🔋 Battery
@@ -539,9 +582,7 @@ En Flet podremos mostrar:
 
 ---
 
----
-
-# 14. 📊 Comparación de mediciones
+##  Comparación de mediciones
 
 Complete la siguiente tabla:
 
@@ -550,7 +591,7 @@ Complete la siguiente tabla:
 | Batería — multímetro         |   _____ V |
 | Divisor — valor calculado    |   _____ V |
 | Divisor — multímetro         |   _____ V |
-| Pico ADC — voltaje calculado |   _____ V |
+| Pico ADC — lectura u16       |   _______ |
 | Flet — voltaje publicado     |   _____ V |
 
 ### Preguntas finales
@@ -566,35 +607,6 @@ Complete la siguiente tabla:
 
 ---
 
-# 🛠️ Resultado esperado
-
-Al finalizar el taller tendremos un **monitor IoT de batería**:
-
-```text
-             🔋 18650
-                 │
-                 ▼
-        ┌────────────────┐
-        │ Voltage divider│
-        └───────┬────────┘
-                │
-                ▼
-          ┌───────────┐
-          │ Pico ADC  │
-          └─────┬─────┘
-                │
-                ▼
-            main.py
-                │
-                ▼
-             PicoROS
-                │
-                ▼
-               Flet
-                │
-                ▼
-          🔋 4.08 V
-```
 
 **La meta no es solamente medir una batería.**
 
