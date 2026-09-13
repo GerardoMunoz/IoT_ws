@@ -1,4 +1,4 @@
-# 05 — Taller: Batería y ADC
+# 06 — Taller: Batería y ADC
 
 ## Objetivos
 
