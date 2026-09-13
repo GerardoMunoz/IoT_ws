@@ -21,21 +21,22 @@ Al finalizar el taller, el estudiante podrá:
 
 Antes de trabajar con la batería, vamos a repasar algunos conceptos de electricidad utilizando una analogía con el agua.
 
-| Electricidad | Analogía hidráulica    | Fórmula  | Unidades |
+| Electricidad | Analogía     | Fórmula  | Unidades |
 | ------------ | ----------------|---------|------------ |
 | Voltaje      | Presión o altura    | $V$ | voltios (V) |
 | Corriente    | Flujo de agua    | $I$ | amperios A) |  
 | Resistencia  | Tubo que dificulta el paso  | $R=V/I$ | ohmios (Ω) |
-| Potencia de una bateria    | Cuanto flujo puede dar a máxima presión  | $P = V I$ |  vatios (W) |
-| Energía de una batería     | Cúanta potencia puede dar en un tiempo dado| $E = V I t$ | joules (J) o Amperios_Hora aMaxVoltaje (Ah) | 
+| Energía de una batería     | Permite saber el tiempo que podria mantener un voltaje y corriente. | $E = V I t$ | joules (J) o Amperios_Hora aMaxVoltaje (Ah) | 
+| Potencia de una bateria    | Permite saber la máxima corriente | $P = V I$ |  vatios (W) |
+
 
 Los materiales con muy poca resistencia se llaman **conductores** y con muy alta resisitencia se llaman **aislantes**
 
 ---
 
-# 2. 🧱 Introducción al protoboard
+# 2. Introducción al protoboard
 
-Un **protoboard** se organiza en ileras de materiales condutores para poder interconectar circuitos antes de hacer el PCB.
+Un **protoboard** se organiza en hileras de materiales condutores. Se utiliza para probar el circuito antes de hacer el PCB.
 
 Las conexiones internas normalmente están organizadas de esta manera:
 
@@ -56,6 +57,7 @@ Las conexiones internas normalmente están organizadas de esta manera:
      ────────────────────────────────
 ```
 
+[https://app.cirkitdesigner.com/project/083ab812-2764-4225-8bbf-48260db8b67a](https://app.cirkitdesigner.com/project/083ab812-2764-4225-8bbf-48260db8b67a)
 
 La ranura central separa normalmente los dos grupos de contactos.
 
@@ -72,7 +74,7 @@ Antes de conectar la batería:
 
 # 3. La batería 18650
 
-> ⚠️ Siempre que se almacena energía, ya sea  mecanica (velocidad, altura, elastica), quimica (explosivos) u otras; hay que tener precauciones.
+> ⚠️ Siempre que se almacena energía, ya sea  mecanica (velocidad, altura, elastica), quimica u otras; hay que tener precauciones.
 
 Una batería 18650 es una celda recargable de tecnología **Li-ion**.
 
@@ -87,8 +89,7 @@ Una batería 18650 no tiene siempre el mismo voltaje.
 
 Su voltaje depende de su estado de carga.
 
-![](https://www.tycorunenergy.com/wp-content/uploads/2025/05/18650-Voltage-Battery-Curve-1024x512.webp
-)
+![](https://www.tycorunenergy.com/wp-content/uploads/2025/05/18650-Voltage-Battery-Curve-1024x512.webp)
 
 Por eso, antes de conectarla al circuito, debemos **medirla**.
 
@@ -160,23 +161,9 @@ El cargador controla el proceso de carga de acuerdo con las características de 
 
 El módulo **TP4056** es muy utilizado para cargar una celda Li-ion de una sola celda.
 
-![](images/cargador.png)
-
-
 Algunos módulos TP4056 incluyen además un circuito de protección para la batería.
 
-
-El cargador y el sistema de alimentación cumplen funciones diferentes.
-
-> ⚠️ Trabajaremos con baterías Li-ion siguiendo las instrucciones indicadas por el profesor.
-
-
-
-
-
-
-
-
+![](images/cargador.png)
 
 ##  El diodo
 
