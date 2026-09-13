@@ -209,13 +209,15 @@ En nuestro robot habrá diferentes cargas:
 * LEDs
 * Otros módulos electrónicos
 
-Cada una necesita una determinada tensión y consume una determinada corriente.
+Cada una necesita un determinado voltaje y consume una determinada corriente.
 
 ---
 
 ## Alimentación mediante USB
 
 Cuando conectamos la Raspberry Pi Pico al computador mediante USB, el computador proporciona la alimentación.
+
+
 
 El voltaje de USB llega al pin **VBUS**.
 
@@ -242,6 +244,8 @@ PICO─────────┐
 │   3.3 V    │
 ⋮             ⋮
 ```
+
+![](https://www.raspberrypi.com/documentation/microcontrollers/images/pico2w-pinout.svg)
 
 **VBUS** corresponde a la alimentación proveniente del conector USB.
 
