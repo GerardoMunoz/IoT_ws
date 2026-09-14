@@ -528,7 +528,7 @@ if __name__ == "__main__":
     AnalogIn(
         scheduler,
         node,
-        "GP26"
+        "GP28"
     )
 
     scheduler.run()
