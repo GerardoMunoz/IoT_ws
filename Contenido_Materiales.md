@@ -8,8 +8,8 @@
  | 4 | WiFi, GPIO, Scheduler, Task, Pub/Sub, Node | Botones, LEDs, Teclados | LED, IR sensor/control | 
  | 5a | Voltaje, corriente, batería | Sliders, Perillas | Power Bank o (18650+TP4056+SW+XL6009+1N5818) | 
  | 5b | ADC, PWM | Sliders, Perillas |  2x(resistencias 5 kΩ), 2x(Sensor de corriente INA226),  2x(Servos de 180° SG90 o MG90s) | 
- | 6 | Servos, MeArm, cinemática | Gemelo del MeArm | MeArm+tornillos | 
- | 7 | PWM, motores, carro, cinemática | Gemelo del Carro | Chasis pequeño, Puente H para 2 motores, 2x(Motores Amarillos), Ruedas | 
+ | 6 | PWM, motores, carro, cinemática | Gemelo del Carro | Chasis pequeño, Puente H para 2 motores, 2x(Motores Amarillos), Ruedas | 
+ | 7 | Servos, MeArm, cinemática | Gemelo del MeArm | MeArm+tornillos | 
  | 8 | I²C | Gráficas de datos | OLED  | 
  | 9 | Transmisión de imagen | Visualización de imagen | OV7670 | 
  | 10 | Procesar imagen |  |  | 
