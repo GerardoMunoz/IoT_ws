@@ -33,3 +33,4 @@
 | **OLED I²C**            |                                                                                                                         |
 | **Sensor de corriente INA226** | ![Referencia del módulo INA226](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-INA226_1.webp)                                |
 | **Cámara OV7670**                    |                                   ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/OV7670_1_1.webp)                                                                                      |
+| **XL6009** | ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/FUENTE-XL6009_1.webp) o ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-XL6009_1.webp)|
