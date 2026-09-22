@@ -779,9 +779,9 @@ class IRIn(Task):
 
         label("on_END")
 
-        mov(isr, invert(x))#
-        push(noblock)
-        irq(rel(0))
+        #mov(isr, invert(x))#
+        #push(noblock)
+        #irq(rel(0))
 
         jmp("on_off")
 
