@@ -706,7 +706,7 @@ Ahora podemos introducir la clase `IRIn`.
 
 
 ```python
-iimport rp2
+import rp2
 from machine import Pin
 
 from task import Task
