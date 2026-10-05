@@ -15,6 +15,34 @@ El modelo utiliza la rueda trasera, se asume que siempre apunta hacia la rueda d
 
 ![img](images/CAR_BICI.png)
 
+### Ecuaciones del modelo
+
+El movimiento del vehículo se describe mediante las siguientes ecuaciones diferenciales:
+
+$$
+\begin{aligned}
+\dot{x} &= v \cdot \cos(\beta) \\
+\dot{y} &= v \cdot \sin(\beta) \\
+\dot{\beta} &= \frac{v}{L} \cdot \tan(\alpha)
+\end{aligned}
+$$
+
+### Definiciones
+
+- $ x, y $: posición del vehículo en el plano
+- $ \beta $: orientación del vehículo (vector que une las ruedas) respecto al eje X (en radianes)
+- $ v $: velocidad lineal del vehículo (en la dirección de la rueda trasera)
+- $ \alpha $: ángulo del timón (rueda delantera respecto al cuerpo del vehículo)
+- $ L $: distancia entre ejes (entre la rueda delantera y trasera)
+
+### Consideraciones
+
+- La rueda trasera no gira lateralmente, solo avanza en línea recta.
+- La rueda delantera gira con ángulo $ \alpha $ y dirige la trayectoria del vehículo.
+- Se asume que no hay deslizamiento lateral.
+
+Este modelo es ampliamente usado en simulación y control de robots móviles y vehículos con dirección delantera.
+
 ## Cinemática diferencial
 
 Cuando el robot diferencial tiene la misma velocidad en ambas ruedas avanza hacia adelante a la misma velocidad de las ruedas.
