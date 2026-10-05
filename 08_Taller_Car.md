@@ -37,7 +37,7 @@ $$
 
 ### Consideraciones
 
-- La rueda trasera no gira lateralmente, solo avanza en línea recta.
+- La rueda trasera no gira lateralmente, solo avanza.
 - La rueda delantera gira con ángulo $ \alpha $ y dirige la trayectoria del vehículo.
 - Se asume que no hay deslizamiento lateral.
 
@@ -49,7 +49,7 @@ Cuando el robot diferencial tiene la misma velocidad en ambas ruedas avanza haci
 
 Sin embargo, si la velocidad de las ruedas es diferente describe un círculo, en  el dibujo se asume que $v_l$ < $v_r$ y que describe un  círculo de radio R.
 
-El ángulo $\alpha$ que gira el robot sobre su centro corresponde al arco que describe el robot, como se puede observar en la figura. Es importante destacar que $\dot{\alpha}$ representa la velocidad angular con la que el robot gira sobre su propio centro. Además, $\dot{\alpha}$ también se interpreta como la velocidad angular del robot alrededor del centro del círculo que describe su trayectoria.
+El ángulo $\alpha$ que gira el robot sobre su centro y al arco que describe, se pueden observar en la figura. Es importante destacar que $\dot{\alpha}$ representa la velocidad angular con la que el robot gira sobre su propio centro. Además, $\dot{\alpha}$ también se interpreta como la velocidad angular del robot alrededor del centro del círculo que describe su trayectoria.
 
 
 Asumiendo que cada rueda está a un distancia d del centro entonces se obtienen las siguientes ecuaciones:
