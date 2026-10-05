@@ -1,3 +1,20 @@
+
+
+## Modelo de la Bicicleta
+
+El modelo de la bicicleta es una simplificación del movimiento de vehículos con dirección delantera, como un carro o un robot tipo coche RC.
+
+* $r_d=\frac{L}{\sin(\alpha)}$
+* $r_t=\frac{L}{\tan(\alpha)}$
+
+Si avanza un ángulo $\beta$:
+* El arco de la rueda trasera es $\beta r_t$
+* El arco de la rueda delantera es $\beta r_d$
+
+El modelo utiliza la rueda trasera, se asume que siempre apunta hacia la rueda delantera.
+
+![img](images/CAR_BICI.png)
+
 ## Cinemática diferencial
 
 Cuando el robot diferencial tiene la misma velocidad en ambas ruedas avanza hacia adelante a la misma velocidad de las ruedas.
