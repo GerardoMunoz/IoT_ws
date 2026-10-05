@@ -57,6 +57,11 @@ Asumiendo que cada rueda está a un distancia d del centro entonces se obtienen 
 * $v_c=\dot{\alpha}R$  
 * $v_r=\dot{\alpha}(R+d)$  
 Al despejar $R$ de la segunda ecuación y reemplazar en las otras dos se obtienen las siguientes ecuaciones conocidas como **cinemática inversa**:
+
+![img](images/CAR_DIF.png)
+  
+
+
 * $v_l=v_c-\dot{\alpha}d$
 * $v_r=v_c+\dot{\alpha}d$
 Despejando  $v_c$ al sumar las ecuaciones, y
@@ -64,8 +69,6 @@ $\dot{\alpha}$ y al restarlas, obtenemos las ecuaciones conocidas como **cinemá
 * $v=v_c=(v_r+v_l)/2$
 * $w=\dot{\alpha}=(v_r-v_l)/(2d)$
 
-![img](images/CAR_DIF.png)
-  
 ## Realizar las conecciones
 ![img](images/CAR_HW.png)
 
