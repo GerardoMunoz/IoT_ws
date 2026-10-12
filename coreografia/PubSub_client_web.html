@@ -1,0 +1,1377 @@
+<!doctype html>
+
+<html>
+<!-- ejemplos    
+PubSub_client_web.html?transport=picoros&host=192.168.0.101&port=5052&robot=0
+PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&robot=0
+PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/iot_ws&robot=3
+-->
+
+<head>
+    <meta charset="utf-8">
+    <title>Dashboard Pub/Sub</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ececec;
+            font-family: system-ui, sans-serif;
+        }
+
+        h3 {
+            margin: 0 0 8px 0;
+        }
+
+        /* ---- GRID DE PANELES ---- */
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .panel {
+            background: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 6px #0002;
+        }
+
+        /* ---- LOG ---- */
+        #log {
+            background: #111;
+            color: #0f0;
+            height: 200px;
+            overflow-y: auto;
+            border-radius: 6px;
+            padding: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+
+        /* ---- TOPIC FILTER BUTTONS ---- */
+        .topic-btn {
+            padding: 4px 8px;
+            background: #ccc;
+            border-radius: 6px;
+            border: none;
+            margin: 2px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .topic-btn.active {
+            background: #4caf50;
+            color: white;
+        }
+
+        /* ---- CANVAS CAMERA ---- */
+        #cam {
+            border: 1px solid #555;
+            image-rendering: pixelated;
+            width: 260px;
+            height: 320px;
+        }
+
+        input,
+        button,
+        textarea {
+            margin: 4px 0;
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+    </style>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+
+
+<body>
+    <div id="grid">
+
+        <!-- ========================================================= -->
+        <!-- PANEL 1: CONEXIÓN WS -->
+        <!-- ========================================================= -->
+        <section class="panel" id="panel-connection">
+            <h3>Connection</h3>
+
+            <label>Transport</label>
+            <input id="transport" readonly>
+
+            <label>Broker IP:</label>
+            <input id="ip" value="None">
+
+            <label>Port:</label>
+            <input id="port" value="None">
+
+            <button id="btnConnect">Connect</button>
+            <button id="btnDisconnect" disabled>Disconnect</button>
+
+            <p id="status">Disconnected</p>
+        </section>
+        <script>
+
+            const params_url = new URLSearchParams(window.location.search);
+
+            const transport = params_url.get("transport") || "picoros";
+            const host = params_url.get("host") || "192.168.0.101";
+            const port = params_url.get("port") || (
+                transport === "mqtt" ? "1883" : "5052"
+            );
+
+            //const robotId = params.get("robot") || "0";
+
+            const ipInput = document.getElementById("ip");
+            const portInput = document.getElementById("port");
+
+            ipInput.value = host;
+            portInput.value = port;
+
+            if (params_url.has("host")) {
+                ipInput.readOnly = true;
+            }
+
+            if (params_url.has("port")) {
+                portInput.readOnly = true;
+            }
+
+            document.getElementById("transport").value = transport;
+
+
+
+            class MQTTWebSocket {
+
+                static CONNECTING = 0;
+                static OPEN = 1;
+                static CLOSING = 2;
+                static CLOSED = 3;
+
+                constructor(url) {
+
+                    this.url = url;
+
+                    this.client = null;
+
+                    this.readyState = MQTTWebSocket.CONNECTING;
+
+                    // WebSocket-like callbacks
+                    this.onopen = null;
+                    this.onclose = null;
+                    this.onmessage = null;
+                    this.onerror = null;
+
+                    // Parse:
+                    // mqtt://192.168.1.10:9001
+                    // ws://192.168.1.10:9001
+                    console.log('mqtt url', url)
+                    this.client = mqtt.connect(url, {
+                        reconnectPeriod: 10000
+                    });
+
+                    //--------------------------------------------------
+                    // CONNECT
+                    //--------------------------------------------------
+
+                    this.client.on("connect", () => {
+
+                        this.readyState = MQTTWebSocket.OPEN;
+
+                        if (this.onopen)
+                            this.onopen();
+
+                    });
+
+                    //--------------------------------------------------
+                    // CLOSE
+                    //--------------------------------------------------
+
+                    this.client.on("close", () => {
+
+                        this.readyState = MQTTWebSocket.CLOSED;
+
+                        if (this.onclose)
+                            this.onclose();
+
+                    });
+
+                    //--------------------------------------------------
+                    // ERROR
+                    //--------------------------------------------------
+
+                    this.client.on("error", (err) => {
+
+                        if (this.onerror)
+                            this.onerror(err);
+
+                    });
+
+                    //--------------------------------------------------
+                    // RECEIVE
+                    //--------------------------------------------------
+
+                    this.client.on("message", (topic, payload) => {
+
+                        let data;
+
+                        try {
+                            data = JSON.parse(payload.toString());
+                        }
+                        catch {
+
+                            data = payload.toString();
+
+                        }
+
+                        const event = {
+
+                            data: JSON.stringify({
+                                action: "PUB",
+                                topic: topic,
+                                data: data
+                            })
+
+                        };
+
+                        if (this.onmessage)
+                            this.onmessage(event);
+
+                    });
+
+                }
+
+                //--------------------------------------------------
+                // Same as WebSocket.send()
+                //--------------------------------------------------
+
+                send(message) {
+
+                    let obj;
+
+                    try {
+                        obj = JSON.parse(message);
+                    }
+                    catch {
+
+                        console.warn("Invalid JSON");
+
+                        return;
+
+                    }
+
+                    switch (obj.action) {
+
+                        case "PUB":
+
+                            this.client.publish(
+                                obj.topic,
+                                JSON.stringify(obj.data)
+                            );
+
+                            break;
+
+                        case "SUB":
+
+                            this.client.subscribe(
+                                obj.topic
+                            );
+
+                            break;
+
+                        default:
+
+                            console.warn(
+                                "Unknown action:",
+                                obj.action
+                            );
+
+                    }
+
+                }
+
+                //--------------------------------------------------
+
+                close() {
+
+                    this.readyState = MQTTWebSocket.CLOSING;
+
+                    this.client.end();
+
+                }
+
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const robotId = params.get("robot") || "0"; // default = 0
+            const remoteSubscriptions = new Set();
+            /* ============================================================
+               CLIENTE WEBSOCKET
+            ============================================================ */
+            let CLIENT_MAC = localStorage.getItem("client_mac");
+            if (!CLIENT_MAC) {
+                CLIENT_MAC = crypto.randomUUID();
+                localStorage.setItem("client_mac", CLIENT_MAC);
+            }
+
+
+            let ws = null;
+
+            const statusBox = document.getElementById("status");
+            const btnConnect = document.getElementById("btnConnect");
+            const btnDisconnect = document.getElementById("btnDisconnect");
+
+            btnConnect.onclick = () => {
+                const ip = document.getElementById("ip").value;
+                const port = document.getElementById("port").value;
+
+                const url = `ws://${ip}:${port}`;
+                logBox.textContent += `Trying to connect to ${url}\n`;
+
+                //ws = new WebSocket(url);
+                const transport = params.get("transport") || "picoros";
+
+                if (transport === "mqtt") {
+                    ws = new MQTTWebSocket(
+                        url
+                    );
+                }
+                else {
+                    ws = new WebSocket(
+                        url + "/ws"
+                    );
+                }
+
+
+                ws.binaryType = "arraybuffer";
+
+                // ws.onopen = () => {
+                //   statusBox.textContent = "🟢 Connected";
+                //   btnConnect.disabled = true;
+                //   btnDisconnect.disabled = true;
+                //   addLog("debug", "WS conectado");
+                // };
+
+                ws.onopen = () => {
+                    statusBox.textContent = "🟢 Connected";
+                    btnConnect.disabled = true;
+                    btnDisconnect.disabled = false;
+                    addLog("debug", "WS conectado");
+
+                    // 🔁 RESUBSCRIBE EVERYTHING
+                    remoteSubscriptions.forEach(topic => {
+                        const obj = { action: "SUB", topic };
+                        ws.send(JSON.stringify(obj));
+                        addLog(topic, "SUB → WS reenviado");
+                    });
+                };
+
+                ws.onclose = () => {
+                    statusBox.textContent = "🔴 Disconnected";
+                    btnConnect.disabled = false;
+                    btnDisconnect.disabled = true;
+                    addLog("debug", "WS cerrado");
+                };
+
+                ws.onerror = (e) => {
+                    addLog("debug", "WS error: " + e.message);
+                };
+
+                ws.onmessage = (ev) => {
+                    //console.log('ws onmessage',ev);
+                    //        action: "PUB"
+                    try {
+                        msg = JSON.parse(ev.data);
+                    } catch (e) {
+                        console.error("JSON inválido:", e);
+                        return;
+                    }
+                    if (msg.action === "PUB") {
+                        bus.publish(msg.topic, msg.data);
+                        return;
+                    }       // bus.publish(msg.topic, msg.data);
+                };
+            };
+
+            btnDisconnect.onclick = () => {
+                if (ws) ws.close();
+            };
+
+
+        </script>
+        <!-- ========================================================= -->
+        <!-- PANEL 1.5: SUSCRIPCIONES ACTIVAS -->
+        <!-- ========================================================= -->
+        <section class="panel" id="panel-subs">
+            <h3>PubSub Subscriptions</h3>
+
+            <button id="btnRefreshSubs">Update</button>
+
+            <ul id="subsList" style="
+        list-style: none; 
+        padding-left: 0; 
+        font-family: monospace;
+        font-size: 0.85rem;">
+            </ul>
+        </section>
+
+        <script>
+            /* ============================================================
+               PANEL DE SUSCRIPCIONES DEL PUBSUB
+               ============================================================ */
+            function compareTopics(pattern, topic) {
+                const p = pattern.split('/');
+                const t = topic.split('/');
+
+                for (let i = 0; i < p.length; i++) {
+
+                    // '#' coincide con cualquier cantidad de niveles (solo final)
+                    if (p[i] === '#') return true;
+
+                    // '+' coincide con exactamente un nivel
+                    if (p[i] === '+') {
+                        if (i >= t.length) return false;
+                        continue;
+                    }
+
+                    // Si el patrón es más largo que el tópico → no coincide
+                    if (i >= t.length) return false;
+
+                    // comparación exacta
+                    if (p[i] !== t[i]) return false;
+                }
+
+                // Si sobraron niveles en el tópico → no coincide
+                return p.length === t.length;
+            }
+
+
+            /* ============================================================
+               PUBSUB LOCAL CON WILDCARDS
+               ============================================================ */
+            class PubSub {
+                constructor() { this.subs = {}; }
+
+                subscribe(pattern, cb) {
+                    if (!this.subs[pattern]) this.subs[pattern] = [];
+                    this.subs[pattern].push(cb);
+                    refreshSubscriptionsPanel()
+                }
+
+                publish(topic, message) {
+                    //console.log('publish',topic, message);
+                    for (const pattern in this.subs) {
+                        if (compareTopics(pattern, topic)) {
+                            this.subs[pattern].forEach(cb => cb(topic, message));//, topic
+                            //console.log('publish',topic,this.subs[pattern],message)
+                        }
+                    }
+
+                    // subscripción global '*'
+                    if (this.subs["*"]) {
+                        this.subs["*"].forEach(cb => cb(topic, message));//topic,
+                    }
+                }
+            }
+
+            const bus = new PubSub();
+
+            const subsList = document.getElementById("subsList");
+            const btnRefreshSubs = document.getElementById("btnRefreshSubs");
+
+            function refreshSubscriptionsPanel() {
+                // Limpiar lista actual
+                subsList.innerHTML = "";
+
+                // Recorrer patrones registrados en el PubSub
+                for (const pattern in bus.subs) {
+                    const count = bus.subs[pattern].length;
+
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+            <b>${pattern}</b>
+            <span style="color:#888">(${count} callback${count !== 1 ? 's' : ''})</span>
+        `;
+                    subsList.appendChild(li);
+                }
+            }
+
+            btnRefreshSubs.onclick = refreshSubscriptionsPanel;
+
+            // Llenar al cargar la página
+            refreshSubscriptionsPanel();
+        </script>
+        <!-- ========================================================= -->
+        <!-- PANEL 2: ENVÍO DE MENSAJES -->
+        <!-- ========================================================= -->
+
+        <section class="panel" id="panel-messages">
+            <h3>Messages</h3>
+
+            <label>Base prefix</label>
+            <input id="basePrefix" value="UDFJC/iot_ws">
+
+            <label>Robot ID</label>
+            <input id="robotId" type="number" value="0" min="0" step="1">
+
+            <label>Full prefix</label>
+            <input id="fullPrefix">
+
+            <hr>
+
+            <label>Topic (suffix)</label>
+            <input id="msgTopic" value="motion/state">
+
+            <label>Payload JSON</label>
+            <textarea id="msgPayload">{
+  "v_dm/s": 1.0,
+  "w_deg/s": 5.7,
+  "alpha0_deg": 0,
+  "alpha1_deg": 45,
+  "alpha2_deg": 30,
+  "duration_s": 15.7
+}
+</textarea>
+
+            <button id="btnPub">Publish</button>
+            <button id="btnSub">Subscribe</button>
+        </section>
+
+        <script>
+            /* ============================================================
+               FUNCIÓN DE COMPARACIÓN DE TÓPICOS (wildcards estilo MQTT)
+               ============================================================ */
+            const basePrefix = params_url.get("prefix") || "UDFJC/iot_ws";
+            document.getElementById("basePrefix").value = basePrefix;
+            // Inputs del panel de mensajes
+            const basePrefixInput = document.getElementById("basePrefix");
+            const robotIdInput = document.getElementById("robotId");
+            robotIdInput.value = robotId
+            const fullPrefixInput = document.getElementById("fullPrefix");
+
+            // Calcula bus.prefix = basePrefix + "/robot" + robotId
+            function updatePrefixFromParts() {
+                let base = (basePrefixInput.value || "").trim();
+                if (base.endsWith("/")) base = base.slice(0, -1);
+
+                //    let robotId = (robotIdInput.value || "").trim();
+                if (robotId === "") robotId = "0";
+
+                fullPrefixInput.value = base + "/robot" + robotId;
+                bus.prefix = fullPrefixInput.value;
+            }
+
+            // Inicializar y enganchar eventos
+            updatePrefixFromParts()
+            basePrefixInput.onchange = updatePrefixFromParts;
+            robotIdInput.onchange = updatePrefixFromParts;
+            fullPrefixInput.onchange = updatePrefixFromFull;
+
+
+            function updatePrefixFromFull() {
+                bus.prefix = fullPrefixInput.value.trim();
+            }
+
+            /* ============================================================
+               EXTENSIONES DEL BUS: API PUB / SUB PARA TODA LA PÁGINA
+               ============================================================ */
+
+            bus.pub = function (topic, message) {
+                // Publicación local
+                bus.publish(topic, message);
+
+                // Enviar al WebSocket si está activo
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    const obj = { action: "PUB", topic, data: message };
+                    ws.send(JSON.stringify(obj));
+                    addLog(topic, "PUB → WS");
+                } else {
+                    addLog(topic, "PUB (solo local, WS no conectado)");
+                }
+            };
+
+            bus.pub_pre = function (sufijo, message) {
+                let suf = (sufijo || "").trim();
+                if (suf.startsWith("/")) suf = suf.slice(1);
+                bus.pub(bus.prefix + "/" + suf, message);
+            };
+
+            // bus.sub = function (topic, callback) {
+            //     // Suscripción local con wildcards
+            //     bus.subscribe(topic, callback);
+            //     addLog(topic, "SUB local registrado");
+
+            //     // Suscripción remota por WebSocket
+            //     if (ws && ws.readyState === WebSocket.OPEN) {
+            //         const obj = { action: "SUB", topic };
+            //         ws.send(JSON.stringify(obj));
+            //         addLog(topic, "SUB → WS enviado");
+            //     } else {
+            //         addLog(topic, "SUB (solo local, WS no conectado)");
+            //     }
+            // };
+
+            bus.sub = function (topic, callback) {
+                // 1. Local subscription (always works)
+                bus.subscribe(topic, callback);
+                addLog(topic, "SUB local registrado");
+
+                // 2. Store for later (important)
+                remoteSubscriptions.add(topic);
+
+                // 3. Send immediately ONLY if connected
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    const obj = { action: "SUB", topic };
+                    ws.send(JSON.stringify(obj));
+                    addLog(topic, "SUB → WS enviado");
+                } else {
+                    addLog(topic, "SUB guardado (WS desconectado)");
+                }
+            };
+
+            bus.sub_pre = function (sufijo, callback) {
+                let suf = (sufijo || "").trim();
+                if (suf.startsWith("/")) suf = suf.slice(1);
+                bus.sub(bus.prefix + "/" + suf, callback);
+            };
+            /* ============================================================
+               BOTONES PUB / SUB (actualizados para usar bus.pub y bus.sub)
+               ============================================================ */
+
+            document.getElementById("btnPub").onclick = () => {
+                const sufix = document.getElementById("msgTopic").value;
+                const topic = `${bus.prefix}/${sufix}`;
+                const data = JSON.parse(document.getElementById("msgPayload").value);
+
+                bus.pub(topic, data);
+            };
+
+            document.getElementById("btnSub").onclick = () => {
+                const sufix = document.getElementById("msgTopic").value;
+                const topic = `${bus.prefix}/${sufix}`;
+
+                bus.sub(topic, (msg, t) => {
+                    addLog(t, "SUB recibió mensaje");
+                });
+            };
+
+
+
+        </script>
+        <!-- ========================================================= -->
+        <!-- PANEL 3: LOG CON FILTROS -->
+        <!-- ========================================================= -->
+        <section class="panel" id="panel-log">
+            <h3>Log</h3>
+
+            <div id="filters"></div>
+            <pre id="log"></pre>
+        </section>
+        <script>
+            /* ============================================================
+               LOG + FILTRO
+            ============================================================ */
+            const logBox = document.getElementById("log");
+            const filtersDiv = document.getElementById("filters");
+            const topicButtons = {};
+            let visibleTopics = new Set();
+
+            function addTopicButton(topic) {
+                if (topicButtons[topic]) return;
+                visibleTopics.add(topic);
+
+                const btn = document.createElement("button");
+                btn.className = "topic-btn active";
+                btn.textContent = topic;
+                btn.onclick = () => {
+                    const active = btn.classList.toggle("active");
+                    if (active) visibleTopics.add(topic);
+                    else visibleTopics.delete(topic);
+                };
+
+                filtersDiv.appendChild(btn);
+                topicButtons[topic] = btn;
+            }
+
+            function addLog(topic, txt) {
+                if (!topicButtons[topic]) addTopicButton(topic);
+                if (!visibleTopics.has(topic)) return;
+
+                logBox.textContent += `[${topic}] ${txt}\n`;
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            bus.subscribe("*", (topic, msg) => {//topic,
+                //console.log('bus.subscribe',msg)
+                if (typeof msg === 'object') {
+                    addLog(topic, Object.keys(msg));
+                }
+                else {
+                    addLog(topic, msg);
+                }
+            });
+
+
+            if (
+                params_url.has("transport") &&
+                params_url.has("host") &&
+                params_url.has("port")
+            ) {
+                btnConnect.click();
+            }
+
+        </script>
+
+
+
+        <!-- ========================================================= -->
+        <!-- PANEL 4: VISUALIZADOR DE CÁMARA -->
+        <!-- ========================================================= -->
+        <section class="panel" id="panel-camera">
+            <h3>Camera (camera/frame)</h3>
+
+            <canvas id="cam" width="160" height="120"></canvas>
+            <p id="camInfo"></p>
+        </section>
+
+
+        <script>
+            /* ============================================================
+               VISUALIZADOR DE CÁMARA (camera/frame con RGB565)
+            ============================================================ */
+            const canvas = document.getElementById("cam");
+            const ctx = canvas.getContext("2d");
+            //const W = 40, H = 30;
+
+            // Se suscribe al tópico: <basePrefix>/robot<id>/camera/frame
+            bus.sub_pre("camera/frame", (topic, payload) => {
+
+                let msg = payload;
+
+                const w = msg.w;
+                const h = msg.h;
+                //    const b64 = msg.frame_b64;
+                const b64 = msg.frame.replace(/\s/g, '');
+
+                // --- Decodificar base64 a Uint8Array ---
+                const binary = atob(b64);      // decodifica base64 → string binario
+                const u8 = new Uint8Array(binary.length);
+
+                for (let i = 0; i < binary.length; i++) {
+                    u8[i] = binary.charCodeAt(i);
+                }
+
+                // --- Convertir RGB565 → RGBA ---
+                const img = ctx.createImageData(w, h);
+                const data = img.data;
+
+                for (let i = 0; i < u8.length; i += 2) {
+                    const rgb565 = (u8[i] << 8) | u8[i + 1];
+                    const r = ((rgb565 >> 11) & 0x1F) << 3;
+                    const g = ((rgb565 >> 5) & 0x3F) << 2;
+                    const b = (rgb565 & 0x1F) << 3;
+
+                    const idx = (i >> 1) * 4;
+                    data[idx] = r;
+                    data[idx + 1] = g;
+                    data[idx + 2] = b;
+                    data[idx + 3] = 255;
+                }
+
+                ctx.putImageData(img, 0, 0);
+
+                document.getElementById("camInfo").textContent =
+                    `Frame RGB565 ~ ${u8.length} bytes (${w}x${h})`;
+            });
+
+
+        </script>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 5: Gemelo Virtual -->
+        <!-- ========================================================= -->
+        <section class="panel" id="panel-gemelo">
+            <h3>Virtual twin</h3>
+            <input id="coreoName" value="choreography   ">
+            <input id="numBotd" value="10">
+            <button id="btnSubRobot">Subscribe Robot</button>
+            <!--button id="btnStartCoreo">Start Choreography</button-->
+            <div id="render1" style="width:100%; height:300px;"></div>
+            <!--canvas id="canvas-gemelo" width="130" height="130"></canvas-->
+            <!--p id="camInfo"></p-->
+        </section>
+
+
+
+        <script type="module">
+            /* ============================================================
+               Gemelo virtual
+            ============================================================ */
+            //   const canvas_gemelo = document.getElementById("canvas-gemelo");
+            //   const ctx_gemelo = canvas_gemelo.getContext("2d");
+
+            // bus.subscribe("UDFJC/iot_ws/robot0/RPi/state", (payload) => {
+            //  });
+
+            // bus.subscribe("UDFJC/iot_ws/robot0/RPi/sequence", (payload) => {
+            //  });
+
+
+            import { CorridorScene } from "./3D/CorridorScene.js";
+            import { RoDifArm } from "./3D/RoDifArm.js";
+
+            const world = new CorridorScene(document.getElementById("render1"));
+            ///////////////////// Robots
+            const n_bots = 10
+            //
+            //const bus=null
+            document.getElementById("btnSubRobot").onclick = () => {
+                const n_robot = Number(document.getElementById("robotId").value);
+                const robot = new RoDifArm(world, bus, {
+                    robotId: n_robot,
+                    prefix: "UDFJC/iot_ws",
+                    x: 0,
+                    y: (n_robot - n_bots / 2) * 5
+                });
+                // for (let n_robot = 0; n_robot < n_bots; n_robot++) {
+                //   const robot = new RoDifArm(world, bus, { x: 0, y: (n_robot - n_bots / 2) * 5 });
+                //   //console.log('n_robot',n_robot,robot.y)
+                // }
+                //console.log('btnSubRobot listo')
+                //robot.attachSubscriptions()
+            };
+
+
+            // document.getElementById("btnStartCoreo").onclick = () => {
+
+            //     const name = document.getElementById("coreoName").value.trim();
+            //     const coreo = name === "" ? "choreography" : name;
+            //     //console.log('paner_twin',coreo)
+            //     //robot.runSequence(coreo);
+
+            //     // const msg = {
+            //     //     action: "PUB",
+            //     //     topic: camera_prefix+"/RPi/sequence",
+            //     //     data: {
+            //     //         "action": "execute_now",
+            //     //         "name": coreo
+            //     //         }
+            //     // };
+
+            //     bus.pub_pre("RPi/sequence", {
+            //         "action": "execute_now",
+            //         "name": coreo
+            //     });
+
+            //     // document.getElementById("coreoStatus").textContent =
+            //     //   `Coreografía enviada: ${coreo}`;
+            // };
+
+
+
+            //   bus.sub_pre("/RPi/sequence", (topic, msg) => {
+            //     console.log('bus.subscribe',msg)
+            //     if (typeof msg === 'object'){
+            //         addLog(topic,  Object.keys(msg) );
+            //     }
+            //     else {
+            //         addLog(topic, msg );
+            //     }
+            //   });
+
+            // const beat = 1;
+            // const n_beats = 5;
+            // const tiempo = n_beats * beat;
+            // const d = 1;
+            // const R = 2.5;
+            // const omega = Math.PI / tiempo;
+            // const vel_lin = omega * R;
+
+            // const sequences = {"choreography":[
+            //       { v: 1, w: 0, alpha0: 0, time: 2 },
+            //       { v: 0, w: -Math.PI / 4, alpha0: -Math.PI / 2, alpha1: 0, time: 2 },
+            //       { v: vel_lin, w: omega, time: tiempo },
+            //       {
+            //         v: 0,
+            //         w: 0,
+            //         alpha0: Math.PI / 2,
+            //         alpha1: (6 * Math.PI) / 16,
+            //         alpha2: -(6 * Math.PI) / 16,
+            //         time: 2,
+            //       },
+            //       { v: -vel_lin, w: omega, time: tiempo },
+            //       { v: 1, w: 0, alpha0: 0, time: 2 },
+            //       {
+            //         v: 0,
+            //         w: -Math.PI / 4,
+            //         alpha0: Math.PI / 2,
+            //         alpha1: (6 * Math.PI) / 16,
+            //         alpha2: -(6 * Math.PI) / 16,
+            //         time: 2,
+            //       },
+            //       { v: -vel_lin, w: omega, time: tiempo },
+            //       { v: 0, w: 0, alpha0: -Math.PI / 2, alpha1: 0, alpha2: 0, time: 2 },
+            //       { v: vel_lin, w: omega, time: tiempo },        
+            //     ]};
+
+
+
+
+
+            function coreografia() {
+                music.volume = 0.7;
+                music.currentTime = 0;
+                music.play().then(() => {
+                    console.log("Música iniciada");
+                    console.log("🎵 Duración total:", music.duration, "segundos");
+                }).catch(err => console.warn("Error al reproducir:", err));
+                setTimeout(() => music.pause(), 16000);
+                set_sequences()
+            }
+
+
+
+        </script>
+
+
+        <!-- ========================================================= -->
+        <!-- PANEL 6: Graphs -->
+        <!-- ========================================================= -->
+        <section class="panel" id="graphs">
+
+            <!--p id="camInfo"></p-->
+            <div id="chartModule" style="margin-top:20px;">
+                <h3>Real-time Topic Monitor</h3>
+
+                <input type="text" id="topicInput" placeholder="Topic suffix">
+                <input type="text" id="keyInput" placeholder="Message key">
+                <button onclick="subscribeTopic()">Subscribe</button>
+
+                <canvas id="chartCanvas" width="600" height="300"></canvas>
+            </div>
+        </section>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            const datasets = {};
+            const colors = ["red", "blue", "green", "orange", "purple", "cyan"];
+            let colorIndex = 0;
+
+            const ctx2 = document.getElementById('chartCanvas').getContext('2d');
+
+            const chart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    animation: false,
+                    responsive: true,
+                    scales: {
+                        x: { display: true },
+                        y: { display: true }
+                    }
+                }
+            });
+
+            // function subscribeTopic() {
+            //     const topic = document.getElementById("topicInput").value;
+            //     const key = document.getElementById("keyInput").value;
+
+            //     const id = topic + ":" + key;
+
+            //     if (!datasets[id]) {
+            //         const color = colors[colorIndex++ % colors.length];
+
+            //         const dataset = {
+            //             label: id,
+            //             data: [],
+            //             borderColor: color,
+            //             fill: false,
+            //             tension: 0.1
+            //         };
+
+            //         datasets[id] = dataset;
+            //         chart.data.datasets.push(dataset);
+            //     }
+
+            //     // Aquí debes conectar con tu sistema PubSub real
+
+            // }
+            function subscribeTopic() {
+                const topicSuffix = document.getElementById("topicInput").value;
+                const key = document.getElementById("keyInput").value;
+
+                const fullTopic = `${bus.prefix}/${topicSuffix}`;
+                const id = fullTopic + ":" + key;
+
+                if (!datasets[id]) {
+                    const color = colors[colorIndex++ % colors.length];
+
+                    const dataset = {
+                        label: id,
+                        data: [],
+                        borderColor: color,
+                        fill: false,
+                        tension: 0.1
+                    };
+
+                    datasets[id] = dataset;
+                    chart.data.datasets.push(dataset);
+                }
+
+                // 🔥 AQUÍ está la magia: suscripción real al bus
+                bus.sub(fullTopic, (topic, message) => {
+
+                    // Validar que el mensaje tenga el key
+                    if (typeof message !== "object") return;
+                    if (!(key in message)) return;
+
+                    const value = message[key];
+
+                    // Solo números (para gráfica)
+                    if (typeof value !== "number") return;
+
+                    addData(id, value);
+                });
+            }
+
+            function addData(id, value) {
+                const maxPoints = 20;
+
+                if (chart.data.labels.length < maxPoints) {
+                    chart.data.labels.push("");
+                } else {
+                    chart.data.labels.shift();
+                    chart.data.labels.push("");
+                }
+
+                Object.keys(datasets).forEach(key => {
+                    if (datasets[key].data.length >= maxPoints) {
+                        datasets[key].data.shift();
+                    }
+                });
+
+                datasets[id].data.push(value);
+
+                chart.update();
+            }
+
+
+
+        </script>
+        <!-- ========================================================= -->
+        <!-- PANEL 7: Stats -->
+        <!-- ========================================================= -->
+        <section class="panel" id="panel-network">
+            <h3>Network Stats. (Watchdog)</h3>
+            <button id="start_recording">Start Recording</button>
+            <button id="stop_recording" disabled>Stop & Download</button>
+            <p>RSSI: <span id="rssi">-</span> dBm</p>
+            <p>Mem free: <span id="mem_free_bytes">-</span> Bytes</p>
+            <p>Mem used: <span id="mem_used_bytes">-</span> Bytes</p>
+            <p>Temperature: <span id="temperature_c">-</span> °C</p>
+            <div id="stats_container"></div>
+            <!--div id="watchdog_stats_table"></div-->
+            <table id="stats_container_table" border="1">
+                <tr>
+                    <th>Topic</th>
+                    <th>Send</th>
+                    <th>Lost</th>
+                    <th>Latency</th>
+                    <th>Jitter</th>
+                </tr>
+            </table>
+            <table id="watchdog_stats_table" border="1">
+                <tr>
+                    <th>Object</th>
+                    <th>Min (us)</th>
+                    <th>Max (us)</th>
+                    <th>CPU use (%)</th>
+                </tr>
+            </table>
+
+
+            <!-- <p>Packet Loss: <span id="loss">-</span> %</p>
+            <p>Latency: <span id="latency">-</span> ms</p>
+            <p>Jitter: <span id="jitter">-</span> ms</p> -->
+        </section>
+
+        <script>
+
+            let stats_recording = false;
+            let statisticsLog = [];
+
+            const btn_stats_start_rec = document.getElementById("start_recording");
+            const btn_stats_stop_rec = document.getElementById("stop_recording");
+
+            btn_stats_start_rec.onclick = () => {
+                stats_recording = true;
+                btn_stats_start_rec.disabled = true;
+                btn_stats_stop_rec.disabled = false;
+                statisticsLog = [];
+            };
+
+            btn_stats_stop_rec.onclick = () => {
+
+                stats_recording = false;
+                btn_stats_start_rec.disabled = false;
+                btn_stats_stop_rec.disabled = true;
+
+                const now = new Date();
+
+                const filename =
+                    `stats_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')
+                    }-${String(now.getDate()).padStart(2, '0')
+                    }_${String(now.getHours()).padStart(2, '0')
+                    }-${String(now.getMinutes()).padStart(2, '0')
+                    }-${String(now.getSeconds()).padStart(2, '0')
+                    }.json`;
+
+                const blob = new Blob(
+                    [JSON.stringify(statisticsLog, null, 2)],
+                    { type: "application/json" }
+                );
+
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                a.click();
+
+                URL.revokeObjectURL(url);
+
+                console.log("Saved:", filename);
+            };
+
+            function recordSample(topic, data) {
+
+                if (!stats_recording) return;
+
+                statisticsLog.push({
+                    topic: topic,
+                    received_ts: performance.now(),
+                    data: structuredClone(data)
+                });
+            };
+
+            class JitterRFC {
+                constructor(bus, topic, containerId) {
+                    this.bus = bus;
+                    this.topic = topic;
+                    this.networkRow = null;
+
+                    this.prev = null;
+                    this.jitter = 0;
+                    this.alpha = 1 / 16;
+
+                    //this.pending = {}; // seq → first_ts
+                    this.received = 0
+
+                    // Create UI
+                    this.createUI(containerId);
+                    this.rows = {};
+
+                    // Subscribe to topic
+                    this.bus.sub_pre(this.topic, (t, msg) => this.onMessage(msg));
+
+                    // Subscribe to response from Pico
+                    this.bus.sub_pre("node/send_second_ts", (t, msg) => this.onSecondTs(msg));
+                }
+
+                createUI(containerId) {
+                    const table = document.getElementById("stats_container_table");
+
+                    this.networkRow = table.insertRow();
+
+                    this.networkRow.insertCell().innerText = this.topic;
+                    this.networkRow.insertCell().innerText = "0"; // sended
+                    this.networkRow.insertCell().innerText = "0"; // lost
+                    this.networkRow.insertCell().innerText = "-"; // latency
+                    this.networkRow.insertCell().innerText = "-"; // jitter
+
+                    //             const container = document.getElementById(containerId);
+
+                    //             this.el = document.createElement("div");
+                    //             this.el.innerHTML = `
+                    //     <h4>${this.topic}</h4>
+                    //     <div>Send-Received: <span id="${this.topic}_seq">-</span></div>
+                    //     <div>Latency: <span id="${this.topic}_lat">-</span> ms</div>
+                    //     <div>Jitter: <span id="${this.topic}_jit">-</span> ms</div>
+                    // `;
+
+                    //             container.appendChild(this.el);
+                }
+
+                onMessage(msg) {
+
+                    // const data = (typeof msg === "string")
+                    //     ? JSON.parse(msg)
+                    //     : msg;
+
+
+
+                    let data = (typeof msg === "string") ? JSON.parse(msg) : msg;
+
+                    // if (stats_recording) {
+                    //     statisticsLog.push({
+                    //         topic: this.topic,
+                    //         received_ts: performance.now(),
+                    //         data: structuredClone(data)
+                    //     });
+                    // }
+
+                    this.updateStatsTable(data);
+
+                    const first_ts = data.first_ts;
+                    //const seq = data.seq;
+                    //console.log('onMessage', data)
+
+
+                    // --- 1. stats ---
+                    if ("rssi" in data) {
+                        document.getElementById("rssi").textContent = data.rssi;
+                    }
+                    if ("mem_free_bytes" in data) {
+                        document.getElementById("mem_free_bytes").textContent = data.mem_free_bytes;
+                    }
+                    if ("mem_used_bytes" in data) {
+                        document.getElementById("mem_used_bytes").textContent = data.mem_used_bytes;
+                    }
+                    if ("temperature_c" in data) {
+                        document.getElementById("temperature_c").textContent = data.temperature_c;
+                    }
+
+                    // --- 2. PACKET LOSS ---
+
+                    if ((data.sended < this.received) || (this.received == 0)) {
+                        this.received = data.sended;
+                    }
+                    else {
+                        this.received += 1;
+                    }
+
+                    //document.getElementById(`${this.topic}_seq`).innerText = String(msg.sended) + '-' + String(this.received) + '=' + String(msg.sended - this.received);
+                    const lost = data.sended - this.received;
+                    //console.log('onMessage', lost, data.sended, this.received, this.row)
+                    this.networkRow.cells[1].innerText = data.sended; // Sended
+                    this.networkRow.cells[2].innerText = lost;       // Lost
+
+
+
+                    //if (first_ts === undefined || seq === undefined) return;
+                    if (first_ts === undefined) return;
+
+                    // Save first timestamp
+                    //this.pending[seq] = first_ts;
+
+                    // Request second timestamp from Pico
+                    this.bus.pub_pre("node/get_second_ts", {
+                        //seq: seq,
+                        first_ts: first_ts,
+                        topic: this.topic,   // IMPORTANT for routing
+                        sended: data.sended
+                    });
+
+                    recordSample(this.topic, { ...data, 'lost': lost, 'received': this.received });
+                    //console.log('onMessage',data)
+
+
+                }
+
+                onSecondTs(msg) {
+                    //console.log('onSecondTs0', msg)
+                    let data = (typeof msg === "string") ? JSON.parse(msg) : msg;
+                    //console.log('onSecondTs1', data.topic, this.topic)
+
+                    // Filter only messages for this topic
+                    if (data.topic !== this.topic) return;
+                    //console.log('onSecondTs2')
+
+                    //const seq = data.first_ts; // matching id
+                    const second_ts = data.second_ts;
+                    const first_ts = data.first_ts;
+
+                    //if (!(seq in this.pending)) return;
+                    //console.log('onSecondTs3')
+
+                    //const first_ts = this.pending[seq];
+                    //delete this.pending[seq];
+
+                    // RTT
+                    const rtt = second_ts - first_ts;
+
+                    // Update jitter (RFC)
+                    if (this.prev !== null) {
+                        const diff = Math.abs(rtt - this.prev);
+                        this.jitter += this.alpha * (diff - this.jitter);
+                    }
+
+                    this.prev = rtt;
+                    //console.log('onSecondTs4', rtt.toFixed(2), this.jitter.toFixed(2))
+                    // Update UI
+                    //document.getElementById(`${this.topic}_lat`).innerText = rtt.toFixed(3);
+                    //document.getElementById(`${this.topic}_jit`).innerText = this.jitter.toFixed(5);
+                    this.networkRow.cells[3].innerText = rtt.toFixed(3);
+                    this.networkRow.cells[4].innerText = this.jitter.toFixed(4);
+                    //console.log('onSecondTs',data)
+                    recordSample(this.topic, { ...data, 'latency': rtt, 'jitter': this.jitter });
+                }
+
+
+                updateStatsTable(data) {
+
+                    const table = document.getElementById("watchdog_stats_table");
+
+                    for (const [name, value] of Object.entries(data)) {
+
+                        if (
+                            typeof value === "object" &&
+                            value !== null &&
+                            "min" in value &&
+                            "max" in value &&
+                            "avg" in value
+                        ) {
+
+                            let row = this.rows[name];
+
+                            if (!row) {
+
+                                row = table.insertRow();
+
+                                row.insertCell().innerText = name;
+                                row.insertCell(); // min
+                                row.insertCell(); // max
+                                row.insertCell(); // avg
+
+                                this.rows[name] = row;
+                            }
+
+                            row.cells[1].innerText = value.min;
+                            row.cells[2].innerText = value.max;
+                            row.cells[3].innerText = (value.avg / value.period / 10).toFixed(1);
+                        }
+                    }
+                }
+
+
+
+
+            }
+
+            const jitter1 = new JitterRFC(bus, "watchdog/stats", "stats_container");
+            const jitter2 = new JitterRFC(bus, "camera/frame", "stats_container");
+
+        </script>
+    </div>
+
+</body>
+
+</html>
