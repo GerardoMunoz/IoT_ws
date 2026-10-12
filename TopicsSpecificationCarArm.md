@@ -4,9 +4,9 @@ This document defines the MQTT topics and the expected JSON payloads to control 
 
 ## 1. Immediate State
 
-### Topic:
+### Topic suffix:
 
-`UDFJC/iot_ws/robot0/state`
+`motion/state`
 
 
 ### Description:
@@ -17,25 +17,25 @@ Applies an immediate state to the robot, setting linear/angular velocities and a
 ```json
 {
   "v_dm/s": 1.0,        // linear velocity [dm/s]
-  "w_deg/s": 5.7,        // angular velocity [°/s]
+  "w_deg/s": 5.7,       // angular velocity [°/s]
   "alpha0_deg": 0,      // joint 0 angle [°]
   "alpha1_deg": 45,     // joint 1 angle [°]
   "alpha2_deg": 30,     // joint 2 angle [°]
-  "duration_s": 15.7  // time in seconds to maintain this state
+  "duration_s": 15.7    // time in seconds to maintain this state
 }
 ```
 
 ### Notes:
 
-All fields are required except duration (default = 1.0 s).
+Missing fields are assumed to be zero except duration, duration default is 1.0 s.
 
 The robot executes this state immediately when received.
 
 ## 2. Sequence Management
 
-### Topic base:
+### Topic suffix:
 
-`UDFJC/iot_ws/robot0/sequence`
+`motion/sequence`
 
 ### Description:
 
