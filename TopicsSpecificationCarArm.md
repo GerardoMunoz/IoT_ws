@@ -6,7 +6,7 @@ This document defines the MQTT topics and the expected JSON payloads to control 
 
 ### Topic:
 
-`UDFJC/iot_ws/robot0/RPi/state`
+`UDFJC/iot_ws/robot0/state`
 
 
 ### Description:
@@ -16,12 +16,12 @@ Applies an immediate state to the robot, setting linear/angular velocities and a
 
 ```json
 {
-  "v_dm/s": 0.2,        // linear velocity [dm/s]
-  "w_deg/s": 0.0,        // angular velocity [°/s]
-  "alfa0_deg": 0,      // joint 0 angle [°]
-  "alfa1_deg": 45,     // joint 1 angle [°]
-  "alfa2_deg": 30,     // joint 2 angle [°]
-  "duration_s": 2.0  // time in seconds to maintain this state
+  "v_dm/s": 1.0,        // linear velocity [dm/s]
+  "w_deg/s": 5.7,        // angular velocity [°/s]
+  "alpha0_deg": 0,      // joint 0 angle [°]
+  "alpha1_deg": 45,     // joint 1 angle [°]
+  "alpha2_deg": 30,     // joint 2 angle [°]
+  "duration_s": 15.7  // time in seconds to maintain this state
 }
 ```
 
@@ -35,7 +35,7 @@ The robot executes this state immediately when received.
 
 ### Topic base:
 
-`UDFJC/iot_ws/robot0/RPi/sequence`
+`UDFJC/iot_ws/robot0/sequence`
 
 ### Description:
 
@@ -47,36 +47,36 @@ Manage the sequences
 // Create a sequence
 {
   "action": "create",
-  "name": "saludo",
+  "name": "hello",
   "run_at": "2025-09-25T20:00:00Z",
   "states": [
-      { "v_dm/s": 10, "w_deg/s": 0, "alfa0_deg": 0, "alfa1_deg": 0, "alfa2_deg": 0, "duration_s": 1.0 },
-      { "v_dm/s": 15.7, "w_deg/s": 90, "alfa0_deg": 0, "alfa1_deg": 0, "alfa2_deg": 0, "duration_s": 1.0 },
-      { "v_dm/s": 0, "w_deg/s": 0, "alfa0_deg": -90, "alfa1_deg": 0, "alfa2_deg": 0, "duration_s": 1.0 },
-      { "v_dm/s": 0, "w_deg/s": 0, "alfa0_deg": 90, "alfa1_deg": 0, "alfa2_deg": 0, "duration_s": 2.0 },
-      { "v_dm/s": 0, "w_deg/s": 0, "alfa0_deg": 0, "alfa1_deg": 90, "alfa2_deg": 0, "duration_s": 1.0 },
-      { "v_dm/s": 0, "w_deg/s": 0, "alfa0_deg": 0, "alfa1_deg": 0, "alfa2_deg": 90, "duration_s": 1.0 }
+      { "v_dm/s": 2, "w_deg/s": 0, "alpha0_deg": 0, "alpha1_deg": 0, "alpha2_deg": 0, "duration_s": 5.0 },
+      { "v_dm/s": 5.2, "w_deg/s": 30, "alpha0_deg": 0, "alpha1_deg": 0, "alpha2_deg": 0, "duration_s": 3.0 },
+      { "v_dm/s": 0, "w_deg/s": 0, "alpha0_deg": -90, "alpha1_deg": 0, "alpha2_deg": 0, "duration_s": 1.0 },
+      { "v_dm/s": 0, "w_deg/s": 0, "alpha0_deg": 90, "alpha1_deg": 0, "alpha2_deg": 0, "duration_s": 2.0 },
+      { "v_dm/s": 0, "w_deg/s": 0, "alpha0_deg": 0, "alpha1_deg": 90, "alpha2_deg": 0, "duration_s": 1.0 },
+      { "v_dm/s": 0, "w_deg/s": 0, "alpha0_deg": 0, "alpha1_deg": 0, "alpha2_deg": 90, "duration_s": 1.0 }
    ]
 }
 
 // Delete a sequence
 {
   "action": "delete",
-  "name": "saludo"
+  "name": "hello"
 }
 
 
 // Execute a sequience immediately
 {
   "action": "schedule",
-  "name": "saludo",
+  "name": "hello",
   "run_at": "now"
 }
 
 // Program the excution
 {
   "action": "schedule",
-  "name": "saludo",
+  "name": "hello",
   "run_at": "2025-09-25T20:00:00Z"
 }
 ```
