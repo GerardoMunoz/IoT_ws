@@ -14,3 +14,6 @@ El robot debe permitir cargar una secuencia de pasos y ejecutarla en el momento 
 4. Ubicar el brazo en los ángulos asignados, con la demora asignada.  
 5. Mostrar en el OLED la información del Watchdog, scroll controlado por el potenciómetro  
 6. Recibir la secuencia de comandos y ejecutar la coreografía según su gemelo virtual&nbsp;
+
+
+https://gerardomunoz.github.io/IoT_ws/coreografia/PubSub_client_web.html
