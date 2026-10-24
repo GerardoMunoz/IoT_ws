@@ -34,7 +34,6 @@
 | **OLED I²C**            |                                                                                                                         |
 | **Sensor de corriente INA226** | ![Referencia del módulo INA226](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-INA226_1.webp)                                |
 | **Cámara OV7670**                    |                                   ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/OV7670_1_1.webp)                                                                                      |
-| **Cargador OKY3604-1
-** | ![](https://cdnx.jumpseller.com/mactornica/image/8898881/PO0151.jpg?1644371670)|
+| **Cargador OKY3604-1** | ![](https://cdnx.jumpseller.com/mactornica/image/8898881/PO0151.jpg?1644371670)|
 | **2 Servos de 180° SG90 o MG90s** | |
 | **2 Motores TT** | ![](https://cdnx.jumpseller.com/mactornica/image/9460298/1.jpg?1656520716) |
