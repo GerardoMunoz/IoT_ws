@@ -28,11 +28,13 @@
 | **Regleta macho 40x1** | ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/REGLETA-40-X-1_2.webp)   |
 | **LED**                              |                                                                                                                         |
 | **Control remoto IR y receptor**             |         ![](https://ditecnomakers.com/statics/2021/04/CONTROL-Y-RECEPTOR-INFRAROJO-05df7734-500x329.jpg)                                                                                                                |
-| **Power Bank**                        | ![Imagen en Wikimedia Commons](https://www.steren.com.co/media/catalog/product/cache/bb0cad18a6adb5d17b0efd58f4201a2f/image/210135423/power-bank-de-2-500-mah.jpg) |
 | **Resistencia 5 kΩ**                 |                                                                                                                         |
 | **Potenciometro de 10k**            | ![Imagen de referencia](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/POT1V-10K_1.webp)          |
 | **Puente H para 2 motores (L298N)**  |     ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-L298-SMD_1.webp)                                                                                                                    |
 | **OLED I²C**            |                                                                                                                         |
 | **Sensor de corriente INA226** | ![Referencia del módulo INA226](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-INA226_1.webp)                                |
 | **Cámara OV7670**                    |                                   ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/OV7670_1_1.webp)                                                                                      |
-| **XL6009** | ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/FUENTE-XL6009_1.webp) o ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-XL6009_1.webp)|
+| **Cargador OKY3604-1
+** | ![](https://cdnx.jumpseller.com/mactornica/image/8898881/PO0151.jpg?1644371670)|
+| **2 Servos de 180° SG90 o MG90s| |
+| **2 Motores TT** | [](https://cdnx.jumpseller.com/mactornica/image/9460298/1.jpg?1656520716) |
