@@ -26,14 +26,15 @@
 | **Raspberry Pi Pico 2 W**            | ![Imagen / fuente](https://www.raspberrypi.com/documentation/microcontrollers/images/pico2w-pinout.svg)      |
 | **Cable USB a microUSB** | ![]() | 
 | **Regleta macho 40x1** | ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/REGLETA-40-X-1_2.webp)   |
-| **LED**                              |                                                                                                                         |
-| **Control remoto IR y receptor**             |         ![](https://ditecnomakers.com/statics/2021/04/CONTROL-Y-RECEPTOR-INFRAROJO-05df7734-500x329.jpg)                                                                                                                |
+| **Cargador OKY3604-1** | ![](https://cdnx.jumpseller.com/mactornica/image/8898881/PO0151.jpg?1644371670)|
+|  **Batería 18650** | |
+| **LED resistencia de 1kΩ**                              |       |
+| **Control remoto IR y receptor**             |         ![](https://ditecnomakers.com/statics/2021/04/CONTROL-Y-RECEPTOR-INFRAROJO-05df7734-500x329.jpg)               |
 | **Resistencia 5 kΩ**                 |                                                                                                                         |
-| **Potenciometro de 10k**            | ![Imagen de referencia](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/POT1V-10K_1.webp)          |
+| **Potenciometro de 10kΩ**            | ![Imagen de referencia](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/POT1V-10K_1.webp)          |
 | **Puente H para 2 motores**  |                                                                                                                   |
 | **OLED I²C**            |                                                                                                                         |
 | **Sensor de corriente INA226** | ![Referencia del módulo INA226](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-INA226_1.webp)                                |
 | **Cámara OV7670**                    |                                   ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/OV7670_1_1.webp)                                                                                      |
-| **Cargador OKY3604-1** | ![](https://cdnx.jumpseller.com/mactornica/image/8898881/PO0151.jpg?1644371670)|
 | **2 Servos de 180° SG90 o MG90s** | |
 | **2 Motores TT** | ![](https://cdnx.jumpseller.com/mactornica/image/9460298/1.jpg?1656520716) |
