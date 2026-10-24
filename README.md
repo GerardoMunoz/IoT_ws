@@ -30,7 +30,7 @@
 | **Control remoto IR y receptor**             |         ![](https://ditecnomakers.com/statics/2021/04/CONTROL-Y-RECEPTOR-INFRAROJO-05df7734-500x329.jpg)                                                                                                                |
 | **Resistencia 5 kΩ**                 |                                                                                                                         |
 | **Potenciometro de 10k**            | ![Imagen de referencia](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/POT1V-10K_1.webp)          |
-| **Puente H para 2 motores (L298N)**  |     ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-L298-SMD_1.webp)                                                                                                                    |
+| **Puente H para 2 motores**  |                                                                                                                   |
 | **OLED I²C**            |                                                                                                                         |
 | **Sensor de corriente INA226** | ![Referencia del módulo INA226](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/TARJETA-INA226_1.webp)                                |
 | **Cámara OV7670**                    |                                   ![](https://www.sigmaelectronica.net/wp-content/uploads/2026/07/OV7670_1_1.webp)                                                                                      |
