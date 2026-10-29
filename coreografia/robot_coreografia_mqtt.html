@@ -50,15 +50,14 @@
             <button id="mqttConnect" type="button">Connect</button>
             <button id="mqttDisconnect" type="button">Disconnect</button>
         </div>
-        <label style="display:block;margin-top:7px">Topic base
-            <input id="topicBase" style="box-sizing:border-box;width:100%;padding:6px" value="UDFJC/iot_ws/robot0/RPi">
+        <label style="display:block;margin-top:7px">Topic prefix (before <code>/motion/...</code>)
+            <input id="topicBase" style="box-sizing:border-box;width:100%;padding:6px" value="UDFJC/carrobot/robot0">
         </label>
         <label style="display:block;margin-top:7px">Robot index
             <input id="robotIndex" type="number" min="0" max="9" value="0" style="width:70px;padding:5px">
         </label>
         <div id="mqttStatus" role="status" style="margin-top:7px;color:#b3261e">Disconnected</div>
-        <small>Subscribes to <code>/state</code> and <code>/sequence</code>. Broker must support MQTT over
-            WebSockets.</small>
+        <small>Subscribes to <code>/motion/state</code> and <code>/motion/sequence</code> under the topic prefix above. Broker must support MQTT over WebSockets.</small>
         <details style="margin-top:8px">
             <summary>Optional music (no local MP3 required)</summary>
             <label style="display:block;margin-top:7px">Direct audio-file URL
@@ -75,7 +74,7 @@
         const music = document.getElementById("music");
         const mqttStatus = document.getElementById("mqttStatus");
         let mqttClient = null;
-        let mqttBase = "UDFJC/iot_ws/robot0/RPi";
+        let mqttBase = "UDFJC/carrobot/robot0";
         const savedSequences = Object.create(null);
         const scheduledTimers = Object.create(null);
 
@@ -90,20 +89,46 @@
             return {index, robot: robots[index]};
         }
 
-        // Convert the degree-based fields in TopicsSpecificationCarArm.md to radians.
-        function stateFromMqtt(payload) {
-            const step = {
-                v: Number(payload["v_dm/s"]),
-                w: Number(payload["w_deg/s"]) * Math.PI / 180,
-                alpha0: Number(payload.alfa0_deg) * Math.PI / 180,
-                alpha1: Number(payload.alfa1_deg) * Math.PI / 180,
-                alpha2: Number(payload.alfa2_deg) * Math.PI / 180,
+        // Convert the MQTT schema in the MQTT topic specification into the
+        // internal Robot format: v in dm/s, w and arm angles in radians, time in seconds.
+        // Linear velocity is NOT rescaled: the Three.js world uses decimeters.
+        function normalizeState(payload) {
+            const isMqttFormat =
+                Object.prototype.hasOwnProperty.call(payload, "v_dm/s") ||
+                Object.prototype.hasOwnProperty.call(payload, "w_deg/s") ||
+                Object.prototype.hasOwnProperty.call(payload, "alpha0_deg") ||
+                Object.prototype.hasOwnProperty.call(payload, "alpha1_deg") ||
+                Object.prototype.hasOwnProperty.call(payload, "alpha2_deg") ||
+                Object.prototype.hasOwnProperty.call(payload, "duration_s");
+
+            const step = isMqttFormat ? {
+                v: Number(payload["v_dm/s"] ?? 0),
+                w: Number(payload["w_deg/s"] ?? 0) * Math.PI / 180,
+                alpha0: Number(payload.alpha0_deg ?? 0) * Math.PI / 180,
+                alpha1: Number(payload.alpha1_deg ?? 0) * Math.PI / 180,
+                alpha2: Number(payload.alpha2_deg ?? 0) * Math.PI / 180,
                 time: Math.max(0.01, Number(payload.duration_s ?? 1.0))
+            } : {
+                // Already-normalized internal sequence: v is dm/s; angles and w are radians.
+                v: Number(payload.v ?? 0),
+                w: Number(payload.w ?? 0),
+                alpha0: Number(payload.alpha0 ?? 0),
+                alpha1: Number(payload.alpha1 ?? 0),
+                alpha2: Number(payload.alpha2 ?? 0),
+                time: Math.max(0.01, Number(payload.time ?? 1.0))
             };
+
             if (![step.v, step.w, step.alpha0, step.alpha1, step.alpha2, step.time].every(Number.isFinite)) {
-                throw new Error("State requires numeric v_dm/s, w_deg/s, alfa0_deg, alfa1_deg, alfa2_deg and duration_s");
+                throw new Error("State fields must be numeric; expected v_dm/s, w_deg/s, alpha0_deg, alpha1_deg, alpha2_deg and duration_s");
             }
             return step;
+        }
+
+        function stateFromMqtt(payload) {
+            if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+                throw new Error("State payload must be a JSON object");
+            }
+            return normalizeState(payload);
         }
 
         function handleStateMessage(payload) {
@@ -195,9 +220,9 @@
                 clientId: "carroRobotWeb_" + Math.random().toString(16).slice(2, 10)
             });
             mqttClient.on("connect", () => {
-                mqttClient.subscribe([mqttBase + "/state", mqttBase + "/sequence"], {qos: 0}, error => {
+                mqttClient.subscribe([mqttBase + "/motion/state", mqttBase + "/motion/sequence"], {qos: 0}, error => {
                     if (error) setMqttStatus("Connected, but subscription failed: " + error.message);
-                    else setMqttStatus("Connected; subscribed to " + mqttBase + "/state and " + mqttBase + "/sequence", true);
+                    else setMqttStatus("Connected; subscribed to " + mqttBase + "/motion/state and " + mqttBase + "/motion/sequence", true);
                 });
             });
             mqttClient.on("message", (topic, message) => {
@@ -208,8 +233,8 @@
                     setMqttStatus("Invalid JSON received on " + topic);
                     return;
                 }
-                if (topic === mqttBase + "/state") handleStateMessage(payload);
-                else if (topic === mqttBase + "/sequence") handleSequenceMessage(payload);
+                if (topic === mqttBase + "/motion/state") handleStateMessage(payload);
+                else if (topic === mqttBase + "/motion/sequence") handleSequenceMessage(payload);
             });
             mqttClient.on("reconnect", () => setMqttStatus("Reconnecting…"));
             mqttClient.on("error", error => {
@@ -349,7 +374,7 @@
             }
 
             setSequence(sequence) {
-                this.sequence = sequence;
+                this.sequence = sequence.map(normalizeState);
                 this.currentStep = null;
                 this.timeLeft = 0;
             }
@@ -682,43 +707,87 @@
             const robot = new Robot(scene, {x: (i - n_bots / 2) * 5, y: 0});
             robots.push(robot);
         }
-        function set_sequences() {
-            for (let i = 0; i < n_bots; i++) {
-                robot = robots[i]
-                if (i % 2 == 0) {
-                    robot.setSequence([
-                        {v: 1, w: 0, alpha0: 0, time: 2},
-                        {v: 0, w: -Math.PI / 4, alpha0: -Math.PI / 2, alpha1: 0, time: 2},
-                        {v: vel_lin, w: omega, time: tiempo},
-                        {
-                            v: 0,
-                            w: 0,
-                            alpha0: Math.PI / 2,
-                            alpha1: (6 * Math.PI) / 16,
-                            alpha2: -(6 * Math.PI) / 16,
-                            time: 2,
-                        },
-                        {v: -vel_lin, w: omega, time: tiempo},
-                    ]);
-                } else {
-                    robot.setSequence([
-                        {v: 1, w: 0, alpha0: 0, time: 2},
-                        {
-                            v: 0,
-                            w: -Math.PI / 4,
-                            alpha0: Math.PI / 2,
-                            alpha1: (6 * Math.PI) / 16,
-                            alpha2: -(6 * Math.PI) / 16,
-                            time: 2,
-                        },
-                        {v: -vel_lin, w: omega, time: tiempo},
-                        {v: 0, w: 0, alpha0: -Math.PI / 2, alpha1: 0, alpha2: 0, time: 2},
-                        {v: vel_lin, w: omega, time: tiempo},
-                    ]);
-                }
 
-            }
+function set_sequences() {
+    for (let i = 0; i < n_bots; i++) {
+        const robot = robots[i];
+
+        if (i % 2 === 0) {
+            // Even-indexed robots
+            robot.setSequence([
+                {
+                    "v_dm/s": 1,
+                    "w_deg/s": 0,
+                    "alpha0_deg": 0,
+                    "duration_s": 2
+                },//o0
+                {
+                    "v_dm/s": 0,
+                    "w_deg/s": -45,
+                    "alpha0_deg": -90,
+                    "alpha1_deg": 0,
+                    "duration_s": 2
+                },//o1
+                {
+                    "v_dm/s": 1.5708,
+                    "w_deg/s": 36,
+                    "duration_s": 5
+                },//o2
+                {
+                    "v_dm/s": 0,
+                    "w_deg/s": 0,
+                    "alpha0_deg": 90,
+                    "alpha1_deg": 67.5,
+                    "alpha2_deg": -67.5,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": -1.5708,
+                    "w_deg/s": 36,
+                    "duration_s": 5
+                }
+            ]);
+        } else {
+            // Odd-indexed robots
+            robot.setSequence([
+                {
+                    "v_dm/s": 1,
+                    "w_deg/s": 0,
+                    "alpha0_deg": 0,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": 0,
+                    "w_deg/s": -45,
+                    "alpha0_deg": 90,
+                    "alpha1_deg": 67.5,
+                    "alpha2_deg": -67.5,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": -1.5708,
+                    "w_deg/s": 36,
+                    "duration_s": 5
+                },
+                {
+                    "v_dm/s": 0,
+                    "w_deg/s": 0,
+                    "alpha0_deg": -90,
+                    "alpha1_deg": 0,
+                    "alpha2_deg": 0,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": 1.5708,
+                    "w_deg/s": 36,
+                    "duration_s": 5
+                }
+            ]);
         }
+    }
+}
+
+
         let lastTime = performance.now();
         const keys = {};
         selectedRobot = robots[0]
