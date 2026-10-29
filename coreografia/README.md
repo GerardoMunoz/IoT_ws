@@ -16,3 +16,6 @@ El robot debe permitir cargar una secuencia de pasos y ejecutarla en el momento 
 6. Recibir la secuencia de comandos y ejecutar la coreografía según su gemelo virtual&nbsp;
  * https://gerardomunoz.github.io/IoT_ws/coreografia/PubSub_client_web.html
  * Como mínimo debe realizar la coreografía propuesta, según si su robot es par ([even.js](even.js)) o impar ([odd.js](odd.js))
+
+
+No olvide que el número de su robot tiene 2 dígitos: `f"robot{grupo_materia}{grupo_proyecto}"`. El `grupo_materia` es `1` para la clase del lunes y `3`para la clase del martes.
