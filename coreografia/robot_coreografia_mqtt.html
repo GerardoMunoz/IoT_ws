@@ -246,24 +246,24 @@
         /////////////////////////////////////////////////
 
 
-        document.getElementById("mqttConnect").addEventListener("click", connectMqtt);
-        document.getElementById("mqttDisconnect").addEventListener("click", () => {
-            if (mqttClient) {
-                mqttClient.end(true);
-                mqttClient = null;
-            }
-            setMqttStatus("Disconnected");
-        });
-        document.getElementById("loadMusic").addEventListener("click", () => {
-            const url = document.getElementById("musicUrl").value.trim();
-            if (!url) {
-                setMqttStatus("Paste a direct audio-file URL to load music");
-                return;
-            }
-            music.src = url;
-            music.load();
-            music.play().catch(error => console.warn("Audio playback needs user permission or a valid direct URL", error));
-        });
+        //document.getElementById("mqttConnect").addEventListener("click", connectMqtt);
+        //document.getElementById("mqttDisconnect").addEventListener("click", () => {
+        //    if (mqttClient) {
+        //        mqttClient.end(true);
+        //        mqttClient = null;
+        //    }
+        //    setMqttStatus("Disconnected");
+        //});
+        // document.getElementById("loadMusic").addEventListener("click", () => {
+        //     const url = document.getElementById("musicUrl").value.trim();
+        //     if (!url) {
+        //         setMqttStatus("Paste a direct audio-file URL to load music");
+        //         return;
+        //     }
+        //     music.src = url;
+        //     music.load();
+        //     music.play().catch(error => console.warn("Audio playback needs user permission or a valid direct URL", error));
+        // });
         ///////////////////////////////////////
 
         class Robot {
@@ -918,10 +918,10 @@ function set_sequences() {
 
         function coreografia() {
             // Choreography does not depend on a local ymca.mp3 file.
-            if (music.src) {
-                music.currentTime = 0;
-                music.play().catch(err => console.warn("Optional audio could not play:", err));
-            }
+            // if (music.src) {
+            //     music.currentTime = 0;
+            //     music.play().catch(err => console.warn("Optional audio could not play:", err));
+            // }
             set_sequences()
         }
 
