@@ -120,8 +120,8 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
 
             const params_url = new URLSearchParams(window.location.search);
 
-            const transport = params_url.get("transport") || "picoros";
-            const host = params_url.get("host") || "192.168.0.101";
+            const transport = params_url.get("transport") || "mqtt";
+            const host = params_url.get("host") || "broker.hivemq.com";
             const port = params_url.get("port") || (
                 transport === "mqtt" ? "1883" : "5052"
             );
