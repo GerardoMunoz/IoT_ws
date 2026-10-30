@@ -123,7 +123,7 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
             const transport = params_url.get("transport") || "mqtt";
             const host = params_url.get("host") || "broker.hivemq.com";
             const port = params_url.get("port") || (
-                transport === "mqtt" ? "1883" : "5052"
+                transport === "mqtt" ? "8884" : "5052"
             );
 
             //const robotId = params.get("robot") || "0";
@@ -330,15 +330,15 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
                 const ip = document.getElementById("ip").value;
                 const port = document.getElementById("port").value;
 
-                const url = `ws://${ip}:${port}`;
+                const url = `wss://${ip}:${port}`;
                 logBox.textContent += `Trying to connect to ${url}\n`;
 
                 //ws = new WebSocket(url);
-                const transport = params.get("transport") || "picoros";
+                const transport = params.get("transport") || "mqtt";
 
                 if (transport === "mqtt") {
                     ws = new MQTTWebSocket(
-                        url
+                        url + "/mqtt"
                     );
                 }
                 else {
