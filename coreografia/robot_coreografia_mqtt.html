@@ -22,6 +22,76 @@
             padding: 10px;
             font-size: 14px;
         }
+
+        #render1 canvas { display: block; }
+
+        #lower-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 12px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+
+        #render2 {
+            flex: 0 0 320px;
+            width: 320px;
+            min-height: 240px;
+        }
+
+        #mqtt-panel {
+            flex: 1 1 420px;
+            min-width: min(360px, 100%);
+            max-width: 760px;
+            box-sizing: border-box;
+            padding: 14px;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 2px 8px #0002;
+            font: 14px system-ui, sans-serif;
+        }
+
+        #mqtt-panel label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        #mqtt-panel input,
+        #mqtt-panel textarea {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 4px;
+            padding: 8px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            font: 13px ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+
+        #mqtt-panel textarea {
+            min-height: 390px;
+            resize: vertical;
+            white-space: pre;
+        }
+
+        #mqtt-panel button {
+            margin-top: 12px;
+            padding: 10px 18px;
+            cursor: pointer;
+        }
+
+        #mqttStatus {
+            margin-top: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 700px) {
+            #lower-layout { display: block; }
+            #mqtt-panel { margin-top: 12px; max-width: 100%; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.min.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -29,7 +99,129 @@
 
 <body>
     <div id="render1"></div>
-    <div id="render2"></div>
+
+    <div id="lower-layout">
+        <div id="render2"></div>
+
+        <section id="mqtt-panel" aria-label="MQTT command sender">
+            <strong>MQTT — envío y recepción de comandos</strong>
+
+            <label for="brokerUrl">Broker WebSocket
+                <input id="brokerUrl" type="text" value="broker.hivemq.com:8884/mqtt"
+                    autocomplete="off" spellcheck="false">
+            </label>
+
+            <label for="topicPrefix">Prefijo
+                <input id="topicPrefix" type="text" value="UDFJC/carrrobot"
+                    autocomplete="off" spellcheck="false">
+            </label>
+
+            <label for="mqttCommands">Comandos (JSON)</label>
+            <textarea id="mqttCommands" spellcheck="false">[
+    {
+        "robots": [
+            12,
+            14,
+            16,
+            18,
+            32,
+            34,
+            36,
+            38
+        ],
+        "sufijo": "motion/sequence",
+        "payload": {
+            "action": "create",
+            "name": "even",
+            "run_at": "now",
+            "states": [
+                {
+                    "v_dm/s": 1,
+                    "w_deg/s": 0,
+                    "alpha0_deg": 0,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": 0,
+                    "w_deg/s": -45,
+                    "alpha0_deg": -90,
+                    "alpha1_deg": 0,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": 1.5708,
+                    "w_deg/s": 36,
+                    "duration_s": 5
+                }
+            ]
+        }
+    },
+    {
+        "robots": [
+            11,
+            13,
+            15,
+            17,
+            19,
+            31,
+            33,
+            35,
+            37,
+            39
+        ],
+        "sufijo": "motion/sequence",
+        "payload": {
+            "action": "create",
+            "name": "odd",
+            "run_at": "now",
+            "states": [
+                {
+                    "v_dm/s": 1,
+                    "w_deg/s": 0,
+                    "alpha0_deg": 0,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": 0,
+                    "w_deg/s": -45,
+                    "alpha0_deg": 90,
+                    "alpha1_deg": 67.5,
+                    "alpha2_deg": -67.5,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": -1.5708,
+                    "w_deg/s": 36,
+                    "duration_s": 5
+                },
+                {
+                    "v_dm/s": 0,
+                    "w_deg/s": 0,
+                    "alpha0_deg": -90,
+                    "alpha1_deg": 0,
+                    "alpha2_deg": 0,
+                    "duration_s": 2
+                },
+                {
+                    "v_dm/s": 1.5708,
+                    "w_deg/s": 36,
+                    "duration_s": 5
+                }
+            ]
+        }
+    }
+]</textarea>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap"><button id="mqttListen" type="button">Conectar y escuchar</button><button id="mqttSend" type="button">Enviar comandos</button></div>
+            <div id="mqttStatus" role="status" aria-live="polite">Desconectado</div>
+            <small>
+                Se publica un mensaje por robot en
+                <code>&lt;prefijo&gt;/robot&lt;id&gt;/&lt;sufijo&gt;</code>.
+                Suscrito a &lt;prefijo&gt;/+/motion/sequence y &lt;prefijo&gt;/+/motion/state. La conexión utiliza WSS por el puerto 8884.
+            </small>
+        </section>
+    </div>
+
     <div id="controls">
         <button onclick="coreografia()">Coreografía</button>
         <button onclick="selectRobot(0)">Robot 0</button>
@@ -39,54 +231,19 @@
         <button onclick="setCameraMode('T')">Tercera</button>
         <button onclick="setCameraMode('B')">Brazo</button>
     </div>
-    <!--section id="mqtt-panel"
-        style="position:fixed;top:10px;right:10px;z-index:20;background:#fff;padding:12px;border:1px solid #bbb;border-radius:8px;max-width:min(420px,calc(100vw - 44px));box-shadow:0 2px 8px #0002;font:14px system-ui,sans-serif;max-height:calc(100vh - 30px);overflow:auto">
-        <strong>MQTT control</strong>
-        <div style="display:flex;gap:6px;margin-top:8px;align-items:end;flex-wrap:wrap">
-            <label style="flex:1;min-width:220px">Broker WebSocket URL
-                <input id="brokerUrl" style="box-sizing:border-box;width:100%;padding:6px"
-                    value="wss://broker.hivemq.com:8884/mqtt">
-            </label>
-            <button id="mqttConnect" type="button">Connect</button>
-            <button id="mqttDisconnect" type="button">Disconnect</button>
-        </div>
-        <label style="display:block;margin-top:7px">Topic prefix (before <code>/motion/...</code>)
-            <input id="topicBase" style="box-sizing:border-box;width:100%;padding:6px" value="UDFJC/carrobot/robot0">
-        </label>
-        <label style="display:block;margin-top:7px">Robot index
-            <input id="robotIndex" type="number" min="0" max="9" value="0" style="width:70px;padding:5px">
-        </label>
-        <div id="mqttStatus" role="status" style="margin-top:7px;color:#b3261e">Disconnected</div>
-        <small>Subscribes to <code>/motion/state</code> and <code>/motion/sequence</code> under the topic prefix above. Broker must support MQTT over WebSockets.</small>
-        <details style="margin-top:8px">
-            <summary>Optional music (no local MP3 required)</summary>
-            <label style="display:block;margin-top:7px">Direct audio-file URL
-                <input id="musicUrl" style="box-sizing:border-box;width:100%;padding:6px"
-                    placeholder="https://example.com/music.mp3">
-            </label>
-            <button id="loadMusic" type="button">Load audio</button>
-            <audio id="music" controls style="display:block;width:100%;margin-top:6px"></audio>
-            <small>Some music services do not allow direct audio playback. Use a direct audio-file URL.</small>
-        </details>
-</section-->
 
     <script>
-        const music = document.getElementById("music");
         const mqttStatus = document.getElementById("mqttStatus");
         let mqttClient = null;
-        let mqttBase = "UDFJC/carrobot/robot0";
         const savedSequences = Object.create(null);
         const scheduledTimers = Object.create(null);
 
-        function setMqttStatus(message, connected = false) {
-            mqttStatus.textContent = message;
-            mqttStatus.style.color = connected ? "#137333" : "#b3261e";
-        }
+        const robotIds = [12, 14, 16, 18, 32, 34, 36, 38, 11, 13, 15, 17, 19, 31, 33, 35, 37, 39];
+        const robotById = new Map();
 
-        function getTargetRobot() {
-            const raw = document.getElementById("robotIndex").value;
-            const index = Number(raw || 0);
-            return {index, robot: robots[index]};
+        function getTargetRobot(robotId) {
+            const robot = robotById.get(Number(robotId));
+            return {index: Number(robotId), robot};
         }
 
         // Convert the MQTT schema in the MQTT topic specification into the
@@ -131,9 +288,9 @@
             return normalizeState(payload);
         }
 
-        function handleStateMessage(payload) {
+        function handleStateMessage(payload, robotId) {
             try {
-                const {index, robot} = getTargetRobot();
+                const {index, robot} = getTargetRobot(robotId);
                 if (!robot) throw new Error("Robot index is out of range");
                 robot.setSequence([stateFromMqtt(payload)]);
                 selectedRobot = robot;
@@ -144,7 +301,7 @@
             }
         }
 
-        function handleSequenceMessage(payload) {
+        function handleSequenceMessage(payload, robotId) {
             try {
                 if (!payload || typeof payload.action !== "string") throw new Error("Sequence payload needs an action");
                 const name = String(payload.name || "");
@@ -155,7 +312,16 @@
                         throw new Error("Create action needs a non-empty states array");
                     }
                     savedSequences[name] = payload.states.map(stateFromMqtt);
-                    setMqttStatus('Sequence "' + name + '" saved (' + savedSequences[name].length + ' states)', true);
+                    // In this project create + run_at:"now" means create and start immediately.
+                    if (payload.run_at === "now") {
+                        const {robot} = getTargetRobot(robotId);
+                        if (!robot) throw new Error("No simulated robot mapped to ID " + robotId);
+                        robot.setSequence(savedSequences[name].map(step => ({...step})));
+                        selectedRobot = robot;
+                        setMqttStatus('Sequence "' + name + '" created and running on Robot ' + robotId, true);
+                    } else {
+                        setMqttStatus('Sequence "' + name + '" saved (' + savedSequences[name].length + ' states)', true);
+                    }
                     return;
                 }
 
@@ -177,7 +343,7 @@
                     if (!Number.isFinite(delay)) throw new Error("Invalid run_at date");
                     if (scheduledTimers[name]) clearTimeout(scheduledTimers[name]);
                     scheduledTimers[name] = setTimeout(() => {
-                        const {index, robot} = getTargetRobot();
+                        const {index, robot} = getTargetRobot(robotId);
                         if (!robot) {
                             setMqttStatus("Scheduled sequence failed: robot index is out of range");
                         } else {
@@ -198,73 +364,194 @@
             }
         }
 
-        function connectMqtt() {
-            if (typeof mqtt === "undefined") {
-                setMqttStatus("MQTT.js did not load; check your internet connection");
-                return;
-            }
-            const brokerUrl = document.getElementById("brokerUrl").value.trim();
-            mqttBase = document.getElementById("topicBase").value.trim().replace(/\/+$/, "");
-            if (!brokerUrl || !mqttBase) {
-                setMqttStatus("Enter a broker URL and topic base");
-                return;
-            }
-            if (mqttClient) {
-                try {mqttClient.end(true);} catch (_) { }
-            }
-            setMqttStatus("Connecting to broker…");
-            mqttClient = mqtt.connect(brokerUrl, {
-                clean: true,
-                connectTimeout: 10000,
-                reconnectPeriod: 3000,
-                clientId: "carroRobotWeb_" + Math.random().toString(16).slice(2, 10)
-            });
-            mqttClient.on("connect", () => {
-                mqttClient.subscribe([mqttBase + "/motion/state", mqttBase + "/motion/sequence"], {qos: 0}, error => {
-                    if (error) setMqttStatus("Connected, but subscription failed: " + error.message);
-                    else setMqttStatus("Connected; subscribed to " + mqttBase + "/motion/state and " + mqttBase + "/motion/sequence", true);
-                });
-            });
-            mqttClient.on("message", (topic, message) => {
-                let payload;
-                try {payload = JSON.parse(message.toString());}
-                catch (error) {
-                    console.warn("Invalid JSON on topic " + topic, error);
-                    setMqttStatus("Invalid JSON received on " + topic);
+        function setMqttStatus(message, connected = false) {
+            const status = document.getElementById("mqttStatus");
+            if (!status) return;
+            status.textContent = message;
+            status.style.color = connected ? "#137333" : "#b3261e";
+        }
+
+        function subscribeToRobotCommands() {
+            const prefix = document.getElementById("topicPrefix").value.trim().replace(/^\/+|\/+$/g, "");
+            const sequenceTopic = `${prefix}/+/motion/sequence`;
+            const stateTopic = `${prefix}/+/motion/state`;
+            mqttClient.subscribe([sequenceTopic, stateTopic], {qos: 0}, error => {
+                if (error) {
+                    setMqttStatus("Error al suscribirse: " + error.message);
                     return;
                 }
-                if (topic === mqttBase + "/motion/state") handleStateMessage(payload);
-                else if (topic === mqttBase + "/motion/sequence") handleSequenceMessage(payload);
+                setMqttStatus("Conectado y suscrito: " + sequenceTopic, true);
             });
-            mqttClient.on("reconnect", () => setMqttStatus("Reconnecting…"));
-            mqttClient.on("error", error => {
-                console.error("MQTT error", error);
-                setMqttStatus("MQTT error: " + error.message);
-            });
-            mqttClient.on("close", () => setMqttStatus("Broker connection closed"));
         }
+
+        function processIncomingMqtt(topic, message) {
+            const prefix = document.getElementById("topicPrefix").value.trim().replace(/^\/+|\/+$/g, "");
+            const match = topic.match(new RegExp("^" + prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "/robot(\\d+)/motion/(sequence|state)$"));
+            if (!match) return;
+            const robotId = Number(match[1]);
+            try {
+                const payload = JSON.parse(message.toString());
+                if (match[2] === "sequence") handleSequenceMessage(payload, robotId);
+                else handleStateMessage(payload, robotId);
+            } catch (error) {
+                console.error("Invalid MQTT message", topic, error);
+                setMqttStatus("Mensaje inválido en " + topic + ": " + error.message);
+            }
+        }
+
+        function getBrokerWebSocketUrl() {
+            let value = document.getElementById("brokerUrl").value.trim();
+            if (!value) throw new Error("Indica la dirección del broker");
+            if (!/^wss?:\/\//i.test(value)) value = "wss://" + value;
+
+            const url = new URL(value);
+            if (url.protocol !== "wss:" && url.protocol !== "ws:") {
+                throw new Error("El broker debe usar ws:// o wss://");
+            }
+            if (!url.pathname || url.pathname === "/") url.pathname = "/mqtt";
+            return url.toString();
+        }
+
+        function validateMqttCommands() {
+            const prefix = document.getElementById("topicPrefix").value.trim().replace(/^\/+|\/+$/g, "");
+            if (!prefix) throw new Error("El prefijo MQTT no puede estar vacío");
+
+            let commands;
+            try {
+                commands = JSON.parse(document.getElementById("mqttCommands").value);
+            } catch (error) {
+                throw new Error("JSON de comandos inválido: " + error.message);
+            }
+
+            if (!Array.isArray(commands) || commands.length === 0) {
+                throw new Error("Comandos debe ser una lista JSON no vacía");
+            }
+
+            commands.forEach((command, index) => {
+                if (!command || !Array.isArray(command.robots) || command.robots.length === 0) {
+                    throw new Error(`Comando ${index + 1}: robots debe ser una lista no vacía`);
+                }
+                if (typeof command.sufijo !== "string" || !command.sufijo.trim()) {
+                    throw new Error(`Comando ${index + 1}: falta el sufijo del topic`);
+                }
+                if (!command.payload || typeof command.payload !== "object" || Array.isArray(command.payload)) {
+                    throw new Error(`Comando ${index + 1}: payload debe ser un objeto JSON`);
+                }
+                command.robots.forEach(robotId => {
+                    if (!Number.isInteger(robotId) || robotId < 0) {
+                        throw new Error(`Comando ${index + 1}: ID de robot inválido (${robotId})`);
+                    }
+                });
+            });
+
+            return {prefix, commands};
+        }
+
+        function publishMqttCommands() {
+            let data;
+            try {
+                data = validateMqttCommands();
+            } catch (error) {
+                setMqttStatus(error.message);
+                return;
+            }
+
+            const messages = [];
+            data.commands.forEach(command => {
+                const suffix = command.sufijo.trim().replace(/^\/+|\/+$/g, "");
+                command.robots.forEach(robotId => {
+                    messages.push({
+                        topic: `${data.prefix}/robot${robotId}/${suffix}`,
+                        payload: JSON.stringify(command.payload)
+                    });
+                });
+            });
+
+            let completed = 0;
+            let succeeded = 0;
+            let failed = 0;
+            setMqttStatus(`Enviando ${messages.length} mensajes…`, true);
+
+            messages.forEach(message => {
+                mqttClient.publish(message.topic, message.payload, {qos: 0, retain: false}, error => {
+                    completed++;
+                    if (error) {
+                        failed++;
+                        console.error("MQTT publish failed:", message.topic, error);
+                    } else {
+                        succeeded++;
+                        console.log("MQTT published:", message.topic, message.payload);
+                    }
+
+                    if (completed === messages.length) {
+                        setMqttStatus(
+                            `Envío terminado: ${succeeded}/${messages.length} mensajes publicados` +
+                            (failed ? `; ${failed} errores (consulta la consola)` : ""),
+                            failed === 0
+                        );
+                    }
+                });
+            });
+        }
+
+        function connectAndPublishMqtt(shouldPublish = true) {
+            if (typeof mqtt === "undefined") {
+                setMqttStatus("MQTT.js no se cargó; revisa la conexión a Internet");
+                return;
+            }
+
+            let brokerUrl;
+            try {
+                brokerUrl = getBrokerWebSocketUrl();
+                validateMqttCommands();
+            } catch (error) {
+                setMqttStatus(error.message);
+                return;
+            }
+
+            if (mqttClient && mqttClient.connected) {
+                if (shouldPublish) publishMqttCommands();
+                else setMqttStatus("Conectado y escuchando comandos MQTT", true);
+                return;
+            }
+
+            if (mqttClient) {
+                try { mqttClient.end(true); } catch (_) {}
+                mqttClient = null;
+            }
+
+            setMqttStatus("Conectando a " + brokerUrl + "…");
+            mqttClient = mqtt.connect(brokerUrl, {
+                clean: true,
+                connectTimeout: 15000,
+                reconnectPeriod: 0,
+                clientId: "carrobotWeb_" + Math.random().toString(16).slice(2, 10)
+            });
+
+            let finished = false;
+            mqttClient.once("connect", () => {
+                finished = true;
+                subscribeToRobotCommands();
+                if (shouldPublish) setTimeout(() => publishMqttCommands(), 250);
+            });
+
+            mqttClient.on("message", processIncomingMqtt);
+
+            mqttClient.on("error", error => {
+                console.error("MQTT error:", error);
+                setMqttStatus("Error MQTT: " + error.message);
+            });
+
+            mqttClient.on("close", () => {
+                if (!finished) setMqttStatus("No se pudo establecer la conexión con el broker");
+            });
+        }
+
+        document.getElementById("mqttSend").addEventListener("click", () => connectAndPublishMqtt(true));
+        document.getElementById("mqttListen").addEventListener("click", () => connectAndPublishMqtt(false));
         /////////////////////////////////////////////////
 
 
-        //document.getElementById("mqttConnect").addEventListener("click", connectMqtt);
-        //document.getElementById("mqttDisconnect").addEventListener("click", () => {
-        //    if (mqttClient) {
-        //        mqttClient.end(true);
-        //        mqttClient = null;
-        //    }
-        //    setMqttStatus("Disconnected");
-        //});
-        // document.getElementById("loadMusic").addEventListener("click", () => {
-        //     const url = document.getElementById("musicUrl").value.trim();
-        //     if (!url) {
-        //         setMqttStatus("Paste a direct audio-file URL to load music");
-        //         return;
-        //     }
-        //     music.src = url;
-        //     music.load();
-        //     music.play().catch(error => console.warn("Audio playback needs user permission or a valid direct URL", error));
-        // });
-        ///////////////////////////////////////
 
         class Robot {
             constructor(scene, options = {}) {
@@ -692,7 +979,7 @@
 
         ///////////////////// Robots
 
-        const n_bots = 10;
+        const n_bots = robotIds.length;
         const robots = [];
 
         const beat = 1;
@@ -704,8 +991,10 @@
         const vel_lin = omega * R;
 
         for (let i = 0; i < n_bots; i++) {
-            const robot = new Robot(scene, {x: (i - n_bots / 2) * 5, y: 0});
+            // Arrange robots along the corridor (world Z axis), not across its width.
+            const robot = new Robot(scene, {x: 0, y: (i - (n_bots - 1) / 2) * 8});
             robots.push(robot);
+            robotById.set(robotIds[i], robot);
         }
 
 function set_sequences() {
