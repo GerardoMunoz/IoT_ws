@@ -558,16 +558,19 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
             function updatePrefixFromParts() {
                 let base = (basePrefixInput.value || "").trim();
                 if (base.endsWith("/")) base = base.slice(0, -1);
-
+                //var base_prefix_=base
                 //    let robotId = (robotIdInput.value || "").trim();
                 if (robotId === "") robotId = "0";
 
                 fullPrefixInput.value = base + "/robot" + robotId;
                 bus.prefix = fullPrefixInput.value;
+                //console.log('base0',base)
+                return  base//, "/robot" + robotId
             }
 
             // Inicializar y enganchar eventos
-            updatePrefixFromParts()
+            let base_prefix=updatePrefixFromParts()
+            //console.log('base',base_prefix)
             basePrefixInput.onchange = updatePrefixFromParts;
             robotIdInput.onchange = updatePrefixFromParts;
             fullPrefixInput.onchange = updatePrefixFromFull;
@@ -797,8 +800,8 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
         <!-- ========================================================= -->
         <section class="panel" id="panel-gemelo">
             <h3>Virtual twin</h3>
-            <input id="coreoName" value="choreography   ">
-            <input id="numBotd" value="10">
+            <!--input id="coreoName" value="choreography   "-->
+            <!--input id="numBotd" value="10"-->
             <button id="btnSubRobot">Subscribe Robot</button>
             <!--button id="btnStartCoreo">Start Choreography</button-->
             <div id="render1" style="width:100%; height:300px;"></div>
@@ -834,9 +837,9 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
                 const n_robot = Number(document.getElementById("robotId").value);
                 const robot = new RoDifArm(world, bus, {
                     robotId: n_robot,
-                    prefix: "UDFJC/iot_ws",
+                    prefix: base_prefix,//"UDFJC/iot_ws",
                     x: 0,
-                    y: (n_robot - n_bots / 2) * 5
+                    y: 0//(n_robot - n_bots / 2) * 5
                 });
                 // for (let n_robot = 0; n_robot < n_bots; n_robot++) {
                 //   const robot = new RoDifArm(world, bus, { x: 0, y: (n_robot - n_bots / 2) * 5 });
