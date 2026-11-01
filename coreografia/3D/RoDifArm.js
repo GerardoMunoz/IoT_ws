@@ -16,6 +16,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158/build/three.mod
  */
 export class RoDifArm {
     constructor(scene, bus, options = {}) {
+        console.log('RoDifArm',bus, options)
         if (!scene) throw new Error("RoDifArm requires a scene.");
         if (!bus) throw new Error("RoDifArm requires a Pub/Sub bus.");
 
@@ -173,6 +174,24 @@ export class RoDifArm {
                 }
                 this.sequences[name] = states.map(state => ({ ...state }));
                 console.info(`[RoDifArm ${this.robotId}] Sequence "${name}" created (${states.length} states).`);
+                const runAt = payload.run_at ?? "now";
+                if (runAt === "now" || runAt === "immediately") {
+                    this.runSequence(name);
+                    return;
+                }
+
+                const timestamp = Date.parse(runAt);
+                if (!Number.isFinite(timestamp)) {
+                    console.warn(`[RoDifArm ${this.robotId}] Invalid run_at value:`, runAt);
+                    return;
+                }
+
+                const delay = Math.max(0, timestamp - Date.now());
+                const timer = setTimeout(() => {
+                    this.scheduledTimers.delete(timer);
+                    this.runSequence(name);
+                }, delay);
+                this.scheduledTimers.add(timer);
                 break;
             }
 
@@ -300,8 +319,9 @@ export class RoDifArm {
             const step = Math.min(remaining, available);
 
             if (step > 0) {
-                this.state.x += motion.v * Math.cos(this.state.beta) * step;
-                this.state.y -= motion.v * Math.sin(this.state.beta) * step;
+                //console.log('motion.v', motion.v,this.state.x,this.state.y)
+                this.state.x += motion.v * Math.cos(this.state.beta) * step*10;
+                this.state.y -= motion.v * Math.sin(this.state.beta) * step*10;
                 this.state.beta += motion.w * step;
 
                 motion.elapsed += step;
@@ -430,6 +450,7 @@ export class RoDifArm {
 
     _render() {
         if (!this.group) return;
+        //console.log('_render',this.state.x, 0, this.state.y)
         this.group.position.set(this.state.x, 0, this.state.y);
         this.group.rotation.y = this.state.beta;
         this.armBase.rotation.y = this.state.alpha0;

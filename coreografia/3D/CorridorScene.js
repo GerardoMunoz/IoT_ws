@@ -1,4 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js";
+//import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/controls/OrbitControls.js";
 
 export class CorridorScene {
     constructor(parentDiv) {
@@ -13,7 +14,7 @@ export class CorridorScene {
         this.scene.background = new THREE.Color(0xf4f4f8);
 
         this.camera = new THREE.PerspectiveCamera(60, this.width / this.height, 0.1, 1000);
-        this.camera.position.set(0, 25, 25);
+        this.camera.position.set(20, 20, 0);
         this.camera.lookAt(0, 0, 0);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
