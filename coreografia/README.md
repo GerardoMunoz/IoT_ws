@@ -14,7 +14,7 @@ El robot debe permitir cargar una secuencia de pasos y ejecutarla en el momento 
 5. Mostrar en el OLED la información del Watchdog, scroll controlado por el potenciómetro  
 6. Recibir la secuencia de comandos y ejecutar la coreografía según su gemelo virtual;
    * Visualización de la coreografía de todos: https://gerardomunoz.github.io/IoT_ws/coreografia/robot_coreografia_mqtt.html
-   * Gemelo virtual individual: https://gerardomunoz.github.io/IoT_ws/coreografia/PubSub_client_web.html?transport=mqtt&host=broker.hivemq.com&port=8884&prefix=UDFJC/carrrobot&robot=30 (No olvidar cambiar el prefijo y el número de robot)
+   * Gemelo virtual individual: https://gerardomunoz.github.io/IoT_ws/coreografia/PubSub_client_web.html?transport=mqtt&host=broker.hivemq.com&port=8884&prefix=UDFJC/carrrobot&robot=30 (No olvidar cambiar el prefijo y el número de robot en el URL) (Oprimir el botón `Connect` (si se necesita) y luego el botón `Subscribe Robot`. Puede oprimir luego el boton `Publish` para cambiar el estado. O en la página `robot_coreografia_mqtt.html` el botón `Enviar comandos` )
    * Como mínimo debe realizar la coreografía propuesta [even.json](even.json) o [odd.json](odd.json), según si el número de su robot es par ([even.json](even.json)) o impar ([odd.json](odd.json)). Pueden ignorar `"alpha0_deg"`.
 
 
