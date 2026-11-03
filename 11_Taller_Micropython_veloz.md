@@ -92,6 +92,7 @@ def toggle(pin: int):
     machine.mem32[0xD0000014] = 1 << pin
 
 @micropython.asm_thumb
+# Assembly.	Explore machine-level instructions
 def add(a, b):
     add(r0, r0, r1)
 ```
