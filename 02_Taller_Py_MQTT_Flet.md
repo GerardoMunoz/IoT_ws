@@ -330,7 +330,10 @@ def on_message(
     message: mqtt.MQTTMessage
 ) -> None:
     """Se ejecuta cada vez que llega un mensaje."""
-    payload = message.payload.decode("utf-8")
+    try:
+        payload = message.payload.decode("utf-8")
+    except:
+        payload = f"No utf-8, len:{len(message.payload)}"
 
     print("\n--- Mensaje recibido ---")
     print(f"Topic: {message.topic}")
