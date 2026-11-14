@@ -105,3 +105,6 @@ def add(a, b):
 * El tacómetro debe representar gráficamente una escala circular y una aguja que indique un valor de velocidad.
 
 * El objetivo es experimentar con diferentes técnicas de programación, comparar sus tiempos de ejecución y determinar cuál permite obtener el mejor rendimiento gráfico.
+
+## Referencias:
+* https://docs.micropython.org/en/latest/reference/speed_python.html
