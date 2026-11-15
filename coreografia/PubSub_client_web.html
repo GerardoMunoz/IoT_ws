@@ -215,34 +215,72 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
                     //--------------------------------------------------
                     // RECEIVE
                     //--------------------------------------------------
+this.client.on("message", (topic, payload) => {
 
-                    this.client.on("message", (topic, payload) => {
+    let data;
 
-                        let data;
+    // Camera frames: preserve raw binary data
+    if (topic.includes("/camera/frame/")) {
 
-                        try {
-                            data = JSON.parse(payload.toString());
-                        }
-                        catch {
+        data = new Uint8Array(
+            payload.buffer,
+            payload.byteOffset,
+            payload.byteLength
+        );
 
-                            data = payload.toString();
+    } else {
 
-                        }
+        // Other topics: decode JSON or text
+        try {
+            data = JSON.parse(payload.toString());
+        }
+        catch {
+            data = payload.toString();
+        }
+    }
 
-                        const event = {
+    // IMPORTANT: Do not JSON.stringify this object!
+    const event = {
+        data: {
+            action: "PUB",
+            topic: topic,
+            data: data
+        }
+    };
 
-                            data: JSON.stringify({
-                                action: "PUB",
-                                topic: topic,
-                                data: data
-                            })
+    if (this.onmessage)
+        this.onmessage(event);
+});
+                    // this.client.on("message", (topic, payload) => {
 
-                        };
+                    //     let data;
 
-                        if (this.onmessage)
-                            this.onmessage(event);
+                    //     try {
+                    //         data = JSON.parse(payload.toString());
+                    //     }
+                    //     catch {
+                    //         data = new Uint8Array(
+                    //             payload.buffer,
+                    //             payload.byteOffset,
+                    //             payload.byteLength
+                    //         );
 
-                    });
+                    //     }
+
+                    //     const event = {
+
+                    //         data: JSON.stringify({
+                    //             action: "PUB",
+                    //             topic: topic,
+                    //             data: data
+                    //         })
+
+                    //     };
+
+                    //     if (this.onmessage)
+                    //         this.onmessage(event);
+
+                    // });
 
                 }
 
@@ -383,18 +421,25 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
                 };
 
                 ws.onmessage = (ev) => {
-                    //console.log('ws onmessage',ev);
-                    //        action: "PUB"
-                    try {
-                        msg = JSON.parse(ev.data);
-                    } catch (e) {
-                        console.error("JSON inválido:", e);
-                        return;
+                    let msg;
+
+                    if (typeof ev.data === "string") {
+                        // Native WebSocket: JSON message
+                        try {
+                            msg = JSON.parse(ev.data);
+                        } catch (e) {
+                            console.error("JSON inválido:", e);
+                            return;
+                        }
                     }
+                    else {
+                        // MQTTWebSocket: already decoded event object
+                        msg = ev.data;
+                    }
+
                     if (msg.action === "PUB") {
                         bus.publish(msg.topic, msg.data);
-                        return;
-                    }       // bus.publish(msg.topic, msg.data);
+                    }
                 };
             };
 
@@ -709,16 +754,27 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
                 logBox.scrollTop = logBox.scrollHeight;
             }
 
-            bus.subscribe("*", (topic, msg) => {//topic,
-                //console.log('bus.subscribe',msg)
-                if (typeof msg === 'object') {
-                    addLog(topic, Object.keys(msg));
-                }
-                else {
-                    addLog(topic, msg);
-                }
-            });
+            // bus.subscribe("*", (topic, msg) => {//topic,
+            //     //console.log('bus.subscribe',msg)
+            //     if (typeof msg === 'object') {
+            //         addLog(topic, Object.keys(msg));
+            //     }
+            //     else {
+            //         addLog(topic, msg);
+            //     }
+            // });
 
+bus.subscribe(bus.prefix + "/#", (topic, msg) => {
+    if (msg instanceof Uint8Array) {
+        addLog(topic, `Binary data: ${msg.byteLength} bytes`);
+    }
+    else if (typeof msg === "object" && msg !== null) {
+        addLog(topic, Object.keys(msg));
+    }
+    else {
+        addLog(topic, msg);
+    }
+});            
 
             if (
                 params_url.has("transport") &&
@@ -747,51 +803,159 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
             /* ============================================================
                VISUALIZADOR DE CÁMARA (camera/frame con RGB565)
             ============================================================ */
-            const canvas = document.getElementById("cam");
-            const ctx = canvas.getContext("2d");
-            //const W = 40, H = 30;
 
-            // Se suscribe al tópico: <basePrefix>/robot<id>/camera/frame
-            bus.sub_pre("camera/frame", (topic, payload) => {
+const canvas = document.getElementById("cam");
+const ctx = canvas.getContext("2d");
 
-                let msg = payload;
+bus.sub_pre("camera/frame/+", (topic, payload) => {
+    //console.log("camera/frame/+",topic)
+    // Extract resolution from topic
+    const match = topic.match(/rgb565_(\d+)x(\d+)$/);
 
-                const w = msg.w;
-                const h = msg.h;
-                //    const b64 = msg.frame_b64;
-                const b64 = msg.frame.replace(/\s/g, '');
+    if (!match) {
+        console.error("Invalid camera topic:", topic);
+        return;
+    }
 
-                // --- Decodificar base64 a Uint8Array ---
-                const binary = atob(b64);      // decodifica base64 → string binario
-                const u8 = new Uint8Array(binary.length);
+    const W = parseInt(match[1]);
+    const H = parseInt(match[2]);
 
-                for (let i = 0; i < binary.length; i++) {
-                    u8[i] = binary.charCodeAt(i);
-                }
+    const u8 = payload instanceof Uint8Array
+        ? payload
+        : new Uint8Array(payload);
+    console.log("camera/frame/+",topic,u8.length,W * H * 2,u8,payload)
+    if (u8.length !== W * H * 2) {
+        console.error("Invalid frame size:", u8.length);
+        return;
+    }
 
-                // --- Convertir RGB565 → RGBA ---
-                const img = ctx.createImageData(w, h);
-                const data = img.data;
+    const img = ctx.createImageData(W, H);
+    const data = img.data;
 
-                for (let i = 0; i < u8.length; i += 2) {
-                    const rgb565 = (u8[i] << 8) | u8[i + 1];
-                    const r = ((rgb565 >> 11) & 0x1F) << 3;
-                    const g = ((rgb565 >> 5) & 0x3F) << 2;
-                    const b = (rgb565 & 0x1F) << 3;
+    for (let i = 0; i < u8.length; i += 2) {
+        const rgb565 = (u8[i] << 8) | u8[i + 1];
 
-                    const idx = (i >> 1) * 4;
-                    data[idx] = r;
-                    data[idx + 1] = g;
-                    data[idx + 2] = b;
-                    data[idx + 3] = 255;
-                }
+        const r = ((rgb565 >> 11) & 0x1F) << 3;
+        const g = ((rgb565 >> 5) & 0x3F) << 2;
+        const b = (rgb565 & 0x1F) << 3;
 
-                ctx.putImageData(img, 0, 0);
+        const idx = (i >> 1) * 4;
 
-                document.getElementById("camInfo").textContent =
-                    `Frame RGB565 ~ ${u8.length} bytes (${w}x${h})`;
-            });
+        data[idx] = r;
+        data[idx + 1] = g;
+        data[idx + 2] = b;
+        data[idx + 3] = 255;
+    }
 
+    // Adapt canvas to frame resolution
+    canvas.width = W;
+    canvas.height = H;
+
+    ctx.putImageData(img, 0, 0);
+
+    camInfo.textContent = `RGB565 ${W}x${H} | ${u8.length} bytes`;
+});
+
+
+// //const W = 160;
+// //const H = 120;
+
+// bus.sub_pre("camera/frame/+", (topic, payload) => {
+//     // Extract resolution from topic
+//     const match = topic.match(/rgb565_(\d+)x(\d+)$/);
+
+//     if (!match) {
+//         console.error("Invalid camera topic:", topic);
+//         return;
+//     }
+
+//     const W = parseInt(match[1]);
+//     const H = parseInt(match[2]);
+
+
+//     // Raw RGB565 binary data
+//     const u8 = payload instanceof Uint8Array
+//         ? payload
+//         : new Uint8Array(payload);
+
+//     if (u8.length !== W * H * 2) {
+//         console.error("Invalid frame size:", u8.length);
+//         return;
+//     }
+
+//     // Convert RGB565 to RGBA
+//     const img = ctx.createImageData(W, H);
+//     const data = img.data;
+
+//     for (let i = 0; i < u8.length; i += 2) {
+
+//         const rgb565 = (u8[i] << 8) | u8[i + 1];
+
+//         const r = ((rgb565 >> 11) & 0x1F) << 3;
+//         const g = ((rgb565 >> 5) & 0x3F) << 2;
+//         const b = (rgb565 & 0x1F) << 3;
+
+//         const idx = (i >> 1) * 4;
+
+//         data[idx]     = r;
+//         data[idx + 1] = g;
+//         data[idx + 2] = b;
+//         data[idx + 3] = 255;
+//     }
+
+//     ctx.putImageData(img, 0, 0);
+
+//     document.getElementById("camInfo").textContent =
+//         `RGB565 ${W}x${H} | ${u8.length} bytes | ${topic}`;
+// });
+
+
+
+//             const canvas = document.getElementById("cam");
+//             const ctx = canvas.getContext("2d");
+//             //const W = 40, H = 30;
+
+//             // Se suscribe al tópico: <basePrefix>/robot<id>/camera/frame
+//             bus.sub_pre("camera/frame", (topic, payload) => {
+
+//                 let msg = payload;
+
+//                 const w = msg.w;
+//                 const h = msg.h;
+//                 //    const b64 = msg.frame_b64;
+//                 const b64 = msg.frame.replace(/\s/g, '');
+
+//                 // --- Decodificar base64 a Uint8Array ---
+//                 const binary = atob(b64);      // decodifica base64 → string binario
+//                 const u8 = new Uint8Array(binary.length);
+
+//                 for (let i = 0; i < binary.length; i++) {
+//                     u8[i] = binary.charCodeAt(i);
+//                 }
+
+//                 // --- Convertir RGB565 → RGBA ---
+//                 const img = ctx.createImageData(w, h);
+//                 const data = img.data;
+
+//                 for (let i = 0; i < u8.length; i += 2) {
+//                     const rgb565 = (u8[i] << 8) | u8[i + 1];
+//                     const r = ((rgb565 >> 11) & 0x1F) << 3;
+//                     const g = ((rgb565 >> 5) & 0x3F) << 2;
+//                     const b = (rgb565 & 0x1F) << 3;
+
+//                     const idx = (i >> 1) * 4;
+//                     data[idx] = r;
+//                     data[idx + 1] = g;
+//                     data[idx + 2] = b;
+//                     data[idx + 3] = 255;
+//                 }
+
+//                 ctx.putImageData(img, 0, 0);
+
+//                 document.getElementById("camInfo").textContent =
+//                     `Frame RGB565 ~ ${u8.length} bytes (${w}x${h})`;
+//             });
+// 
 
         </script>
 
@@ -1370,7 +1534,7 @@ PubSub_client_web.html?transport=mqtt&host=192.168.0.101&port=9001&prefix=UDFJC/
             }
 
             const jitter1 = new JitterRFC(bus, "watchdog/stats", "stats_container");
-            const jitter2 = new JitterRFC(bus, "camera/frame", "stats_container");
+            //const jitter2 = new JitterRFC(bus, "camera/frame", "stats_container");
 
         </script>
     </div>
